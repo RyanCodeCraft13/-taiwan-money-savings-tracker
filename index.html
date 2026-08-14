@@ -3,913 +3,970 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0f172a">
-  <meta name="description" content="Taiwan salary, savings and expense tracker">
 
-  <title>Taiwan Ipon Tracker</title>
+  <meta name="theme-color" content="#ff4f93">
+  <meta name="description" content="Taiwan Ipon - Salary, Savings and Expense Tracker">
+
+  <title>Taiwan Ipon</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- ================= HEADER ================= -->
+<div class="app">
 
-<header class="topbar">
+  <!-- HEADER -->
+  <header class="topbar">
 
-  <div class="brand">
-    <div class="logo">🇹🇼</div>
+    <div class="brand">
+      <div class="logo">🇹🇼</div>
 
-    <div>
-      <h1>Taiwan Ipon</h1>
-      <p>Save • Track • Achieve</p>
-    </div>
-  </div>
-
-  <button
-    id="themeBtn"
-    class="icon-button"
-    aria-label="Change theme">
-    🌙
-  </button>
-
-</header>
-
-
-<!-- ================= MAIN ================= -->
-
-<main class="app">
-
-
-<!-- ================= HOME ================= -->
-
-<section
-  id="home"
-  class="page active">
-
-  <div class="welcome">
-
-    <p class="small-label">
-      YOUR MONEY JOURNEY
-    </p>
-
-    <h2>
-      Keep going! 💪
-    </h2>
-
-    <p>
-      Every peso you save brings you closer
-      to your goal.
-    </p>
-
-  </div>
-
-
-  <!-- TOTAL SAVINGS -->
-
-  <div class="main-balance">
-
-    <div class="balance-top">
-
-      <span>
-        🏦 Total Savings
-      </span>
-
-      <span class="rate-badge">
-        1 TWD =
-        ₱<span id="topRate">1.85</span>
-      </span>
-
-    </div>
-
-
-    <div class="balance-number">
-      <h2 id="homeSavingsNT">
-        NT$0
-      </h2>
-
-      <p id="homeSavingsPHP">
-        ₱0
-      </p>
-    </div>
-
-
-    <div class="goal-progress">
-
-      <div class="progress-label">
-
-        <span>
-          🎯 Goal
-        </span>
-
-        <span id="homeGoalPercent">
-          0%
-        </span>
-
+      <div>
+        <strong>Taiwan Ipon</strong>
+        <small>Save • Track • Achieve</small>
       </div>
+    </div>
 
-      <div class="progress-track">
+    <button class="icon-btn" id="themeBtn">
+      ☾
+    </button>
 
-        <div
-          id="homeProgress"
-          class="progress-fill">
+  </header>
+
+
+  <main>
+
+    <!-- ================= HOME ================= -->
+
+    <section id="home" class="screen active">
+
+      <div class="welcome">
+
+        <div>
+          <span class="label">YOUR MONEY</span>
+
+          <h1>Hello! 👋</h1>
+
+          <p>
+            Small savings today, bigger dreams tomorrow.
+          </p>
+        </div>
+
+        <div class="avatar">
+          RN
         </div>
 
       </div>
 
-      <div class="goal-bottom">
 
-        <span>
-          Saved
-          <strong id="homeSavedSmall">
-            NT$0
-          </strong>
-        </span>
+      <!-- BALANCE CARD -->
 
-        <span>
-          Goal
-          <strong id="homeGoalSmall">
-            NT$0
-          </strong>
-        </span>
+      <div class="balance-card">
 
-      </div>
+        <div class="balance-top">
 
-    </div>
+          <span>Total Savings</span>
 
-  </div>
+          <button id="hideBalance">
+            ◉
+          </button>
 
+        </div>
 
-  <!-- QUICK ADD -->
+        <h2 id="totalSavings">
+          NT$0
+        </h2>
 
-  <div class="quick-section">
-
-    <div class="section-heading">
-
-      <div>
-        <h3>
-          Quick Add
-        </h3>
-
-        <p>
-          Record your money in seconds.
+        <p id="totalSavingsPHP">
+          ₱0
         </p>
-      </div>
 
-    </div>
+        <div class="currency">
 
+          🇹🇼 TWD
 
-    <div class="quick-grid">
+          <span>
+            1 TWD = ₱<b id="rateDisplay">1.8500</b>
+          </span>
 
-      <button
-        class="quick-card income-btn"
-        onclick="openTransaction('income')">
+        </div>
 
-        <span class="quick-icon">
-          💵
-        </span>
 
-        <strong>
-          Income
-        </strong>
+        <div class="goal-mini">
 
-        <small>
-          Salary / OT
-        </small>
+          <div class="goal-title">
 
-      </button>
+            <span>🎯 Savings Goal</span>
 
+            <b id="goalPercent">
+              0%
+            </b>
 
-      <button
-        class="quick-card saving-btn"
-        onclick="openTransaction('saving')">
+          </div>
 
-        <span class="quick-icon">
-          🏦
-        </span>
+          <div class="progress">
 
-        <strong>
-          Savings
-        </strong>
+            <div id="goalProgress"></div>
 
-        <small>
-          Add to ipon
-        </small>
+          </div>
 
-      </button>
+          <div class="goal-info">
 
+            <span id="savedText">
+              NT$0 saved
+            </span>
 
-      <button
-        class="quick-card expense-btn"
-        onclick="openTransaction('expense')">
+            <span id="goalText">
+              Goal NT$150,000
+            </span>
 
-        <span class="quick-icon">
-          🍜
-        </span>
+          </div>
 
-        <strong>
-          Expense
-        </strong>
-
-        <small>
-          Food / daily
-        </small>
-
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <!-- MONTH SUMMARY -->
-
-  <div class="stats-grid">
-
-    <div class="stat-card">
-
-      <span>💵 Income</span>
-
-      <strong id="homeIncome">
-        NT$0
-      </strong>
-
-      <small id="homeIncomePHP">
-        ₱0
-      </small>
-
-    </div>
-
-
-    <div class="stat-card">
-
-      <span>🍜 Expenses</span>
-
-      <strong id="homeExpenses">
-        NT$0
-      </strong>
-
-      <small id="homeExpensesPHP">
-        ₱0
-      </small>
-
-    </div>
-
-
-    <div class="stat-card">
-
-      <span>🔥 This Month</span>
-
-      <strong id="homeMonthSaving">
-        NT$0
-      </strong>
-
-      <small id="homeMonthSavingPHP">
-        ₱0
-      </small>
-
-    </div>
-
-  </div>
-
-
-  <!-- IPON CHALLENGE -->
-
-  <div class="friendly-card">
-
-    <div class="friendly-icon">
-      🔥
-    </div>
-
-    <div class="friendly-content">
-
-      <h3>
-        Taiwan Ipon Challenge
-      </h3>
-
-      <p id="challengeMessage">
-        Start your savings journey today!
-      </p>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-
-<!-- ================= TRANSACTIONS ================= -->
-
-<section
-  id="transactions"
-  class="page">
-
-  <div class="page-header">
-
-    <div>
-      <p class="small-label">
-        MONEY ACTIVITY
-      </p>
-
-      <h2>
-        Transactions
-      </h2>
-
-      <p>
-        Keep track of every peso.
-      </p>
-    </div>
-
-    <button
-      class="add-button"
-      onclick="openTransaction('expense')">
-      +
-    </button>
-
-  </div>
-
-
-  <div class="filter-row">
-
-    <button
-      class="filter active"
-      onclick="filterTransactions('all', this)">
-      All
-    </button>
-
-    <button
-      class="filter"
-      onclick="filterTransactions('income', this)">
-      Income
-    </button>
-
-    <button
-      class="filter"
-      onclick="filterTransactions('saving', this)">
-      Savings
-    </button>
-
-    <button
-      class="filter"
-      onclick="filterTransactions('expense', this)">
-      Expenses
-    </button>
-
-  </div>
-
-
-  <div
-    id="transactionList"
-    class="transaction-list">
-  </div>
-
-</section>
-
-
-
-<!-- ================= GOALS ================= -->
-
-<section
-  id="goals"
-  class="page">
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="small-label">
-        YOUR DREAM
-      </p>
-
-      <h2>
-        Savings Goal
-      </h2>
-
-      <p>
-        Give your savings a purpose.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="goal-card">
-
-    <div class="goal-circle">
-
-      <span id="goalCirclePercent">
-        0%
-      </span>
-
-    </div>
-
-
-    <div class="goal-details">
-
-      <span>
-        🎯 Target
-      </span>
-
-      <h3 id="goalTitle">
-        My Taiwan Savings
-      </h3>
-
-      <strong id="goalAmount">
-        NT$0
-      </strong>
-
-      <p id="goalPHP">
-        ₱0
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="form-card">
-
-    <h3>
-      Set Your Goal
-    </h3>
-
-    <div class="input-group">
-
-      <label>
-        Goal Name
-      </label>
-
-      <input
-        id="goalName"
-        type="text"
-        placeholder="Example: Emergency Fund">
-
-    </div>
-
-
-    <div class="input-group">
-
-      <label>
-        Goal Amount (NT$)
-      </label>
-
-      <input
-        id="goalInput"
-        type="number"
-        placeholder="150000">
-
-    </div>
-
-
-    <div class="input-group">
-
-      <label>
-        Target Date
-      </label>
-
-      <input
-        id="goalDate"
-        type="date">
-
-    </div>
-
-
-    <button
-      class="primary-button full"
-      onclick="saveGoal()">
-
-      Save My Goal
-
-    </button>
-
-  </div>
-
-</section>
-
-
-
-<!-- ================= SALARY ================= -->
-
-<section
-  id="salary"
-  class="page">
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="small-label">
-        YOUR PAYDAY PLAN
-      </p>
-
-      <h2>
-        Salary Plan
-      </h2>
-
-      <p>
-        Tell your money where to go.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="salary-card">
-
-    <label>
-      Monthly Salary
-    </label>
-
-    <div class="salary-input">
-
-      <span>
-        NT$
-      </span>
-
-      <input
-        id="salaryInput"
-        type="number"
-        placeholder="40000">
-
-    </div>
-
-
-    <div class="salary-result">
-
-      <span>
-        Philippine equivalent
-      </span>
-
-      <strong id="salaryPHP">
-        ₱0
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <div class="allocation-card">
-
-    <div class="allocation-title">
-
-      <div>
-        <h3>
-          Automatic Allocation
-        </h3>
-
-        <p>
-          Adjust the percentages.
-        </p>
-      </div>
-
-      <span
-        id="allocationTotal"
-        class="total-badge">
-        100%
-      </span>
-
-    </div>
-
-
-    <div class="allocation-row">
-
-      <div>
-        <span>🏦 Savings</span>
-        <small id="savePercentText">
-          40%
-        </small>
-      </div>
-
-      <strong id="saveAmount">
-        NT$0
-      </strong>
-
-    </div>
-
-
-    <input
-      id="savePercent"
-      class="range"
-      type="range"
-      min="0"
-      max="100"
-      value="40">
-
-
-    <div class="allocation-row">
-
-      <div>
-        <span>🍜 Expenses</span>
-        <small id="expensePercentText">
-          35%
-        </small>
-      </div>
-
-      <strong id="expenseAmount">
-        NT$0
-      </strong>
-
-    </div>
-
-
-    <input
-      id="expensePercent"
-      class="range"
-      type="range"
-      min="0"
-      max="100"
-      value="35">
-
-
-    <div class="allocation-row">
-
-      <div>
-        <span>🇵🇭 Family</span>
-        <small id="familyPercentText">
-          15%
-        </small>
-      </div>
-
-      <strong id="familyAmount">
-        NT$0
-      </strong>
-
-    </div>
-
-
-    <input
-      id="familyPercent"
-      class="range"
-      type="range"
-      min="0"
-      max="100"
-      value="15">
-
-
-    <div class="allocation-row">
-
-      <div>
-        <span>📦 Others</span>
-        <small id="otherPercentText">
-          10%
-        </small>
-      </div>
-
-      <strong id="otherAmount">
-        NT$0
-      </strong>
-
-    </div>
-
-
-    <input
-      id="otherPercent"
-      class="range"
-      type="range"
-      min="0"
-      max="100"
-      value="10">
-
-
-    <div
-      id="allocationWarning"
-      class="warning hidden">
-
-      Percentages must total 100%.
-
-    </div>
-
-  </div>
-
-</section>
-
-
-
-<!-- ================= SETTINGS ================= -->
-
-<section
-  id="settings"
-  class="page">
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="small-label">
-        CUSTOMIZE
-      </p>
-
-      <h2>
-        Settings
-      </h2>
-
-      <p>
-        Make the tracker work for you.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- CURRENCY -->
-
-  <div class="settings-card">
-
-    <div class="setting-icon">
-      💱
-    </div>
-
-    <div class="setting-content">
-
-      <h3>
-        Exchange Rate
-      </h3>
-
-      <p>
-        Set your preferred TWD → PHP rate.
-      </p>
-
-      <div class="rate-box">
-
-        <span>
-          1 TWD =
-        </span>
-
-        <input
-          id="rateInput"
-          type="number"
-          step="0.0001"
-          min="0"
-          value="1.85">
-
-        <span>
-          PHP
-        </span>
+        </div>
 
       </div>
 
-      <button
-        class="secondary-button"
-        onclick="saveRate()">
 
-        Save Rate
+      <!-- QUICK ACTIONS -->
 
-      </button>
+      <div class="quick-actions">
 
-    </div>
+        <button onclick="openTransaction('income')">
 
-  </div>
+          <div class="action-icon income">
+            ＋
+          </div>
 
-
-  <!-- DATA -->
-
-  <div class="settings-card">
-
-    <div class="setting-icon">
-      💾
-    </div>
-
-    <div class="setting-content">
-
-      <h3>
-        Backup Your Data
-      </h3>
-
-      <p>
-        Save a backup before changing phones.
-      </p>
-
-      <div class="button-row">
-
-        <button
-          class="secondary-button"
-          onclick="exportData()">
-
-          📤 Export
+          <span>Income</span>
 
         </button>
 
-        <label
-          class="secondary-button">
 
-          📥 Import
+        <button onclick="openTransaction('saving')">
 
-          <input
-            id="importFile"
-            type="file"
-            accept=".json"
-            hidden>
+          <div class="action-icon saving">
+            ↗
+          </div>
 
-        </label>
+          <span>Save</span>
+
+        </button>
+
+
+        <button onclick="openTransaction('expense')">
+
+          <div class="action-icon expense">
+            −
+          </div>
+
+          <span>Expense</span>
+
+        </button>
+
+
+        <button onclick="openTransaction('family')">
+
+          <div class="action-icon family">
+            ₱
+          </div>
+
+          <span>Family</span>
+
+        </button>
 
       </div>
 
-    </div>
 
-  </div>
+      <!-- SALARY -->
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="label">
+            PAYDAY PLAN
+          </span>
+
+          <h2>
+            Monthly Salary
+          </h2>
+
+        </div>
+
+        <button
+          class="text-button"
+          onclick="showScreen('salary')"
+        >
+          Edit
+        </button>
+
+      </div>
 
 
-  <!-- DANGER -->
+      <div class="salary-summary">
 
-  <div class="settings-card danger-card">
+        <div>
 
-    <div class="setting-icon">
-      ⚠️
-    </div>
+          <span>Salary</span>
 
-    <div class="setting-content">
+          <strong id="salaryDisplay">
+            NT$0
+          </strong>
 
-      <h3>
-        Reset Tracker
-      </h3>
+          <small id="salaryPHP">
+            ₱0
+          </small>
 
-      <p>
-        Delete all locally saved data.
-      </p>
+        </div>
+
+
+        <div class="recommended">
+
+          <span>
+            Recommended Savings
+          </span>
+
+          <strong id="recommendedSaving">
+            NT$0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!-- RECENT -->
+
+      <div class="section-header">
+
+        <div>
+
+          <span class="label">
+            RECENT
+          </span>
+
+          <h2>
+            Recent Activity
+          </h2>
+
+        </div>
+
+        <button
+          class="text-button"
+          onclick="showScreen('activity')"
+        >
+          See All
+        </button>
+
+      </div>
+
+
+      <div
+        id="recentTransactions"
+        class="transactions"
+      ></div>
+
+    </section>
+
+
+
+    <!-- ================= ACTIVITY ================= -->
+
+    <section id="activity" class="screen">
+
+      <div class="page-title">
+
+        <span class="label">
+          MONEY ACTIVITY
+        </span>
+
+        <h1>
+          Transactions
+        </h1>
+
+        <p>
+          Every income, saving and expense in one place.
+        </p>
+
+      </div>
+
+
+      <div class="filters">
+
+        <button class="filter active" data-filter="all">
+          All
+        </button>
+
+        <button class="filter" data-filter="income">
+          Income
+        </button>
+
+        <button class="filter" data-filter="saving">
+          Savings
+        </button>
+
+        <button class="filter" data-filter="expense">
+          Expenses
+        </button>
+
+        <button class="filter" data-filter="family">
+          Family
+        </button>
+
+      </div>
+
+
+      <div
+        id="allTransactions"
+        class="transactions"
+      ></div>
+
+    </section>
+
+
+
+    <!-- ================= SAVINGS ================= -->
+
+    <section id="savings" class="screen">
+
+      <div class="page-title">
+
+        <span class="label">
+          YOUR DREAM
+        </span>
+
+        <h1>
+          My Ipon 🎯
+        </h1>
+
+        <p>
+          Turn your Taiwan salary into progress.
+        </p>
+
+      </div>
+
+
+      <div class="goal-card">
+
+        <div class="goal-ring" id="goalRing">
+
+          <span id="ringPercent">
+            0%
+          </span>
+
+        </div>
+
+
+        <div>
+
+          <small>
+            Current Goal
+          </small>
+
+          <h2 id="goalName">
+            My Taiwan Savings
+          </h2>
+
+          <strong id="goalAmount">
+            NT$150,000
+          </strong>
+
+          <p id="goalPHP">
+            ₱277,500
+          </p>
+
+        </div>
+
+      </div>
+
 
       <button
-        class="danger-button"
-        onclick="resetApp()">
-
-        Reset Everything
-
+        class="primary-btn"
+        onclick="openTransaction('saving')"
+      >
+        ＋ Add to Savings
       </button>
 
-    </div>
 
-  </div>
+      <div class="two-cards">
 
-</section>
+        <div class="mini-card">
 
+          <span>Saved</span>
 
-</main>
+          <strong id="savedAmount">
+            NT$0
+          </strong>
 
+          <small id="savedPHP">
+            ₱0
+          </small>
 
-
-<!-- ================= BOTTOM NAV ================= -->
-
-<nav class="bottom-nav">
-
-  <button
-    class="nav-item active"
-    data-page="home"
-    onclick="showPage('home', this)">
-
-    <span>🏠</span>
-    <small>Home</small>
-
-  </button>
+        </div>
 
 
-  <button
-    class="nav-item"
-    data-page="transactions"
-    onclick="showPage('transactions', this)">
+        <div class="mini-card">
 
-    <span>📋</span>
-    <small>Activity</small>
+          <span>Remaining</span>
 
-  </button>
+          <strong id="remainingAmount">
+            NT$150,000
+          </strong>
 
+          <small id="remainingPHP">
+            ₱277,500
+          </small>
 
-  <button
-    class="nav-item"
-    data-page="goals"
-    onclick="showPage('goals', this)">
+        </div>
 
-    <span>🎯</span>
-    <small>Goals</small>
-
-  </button>
+      </div>
 
 
-  <button
-    class="nav-item"
-    data-page="salary"
-    onclick="showPage('salary', this)">
+      <!-- GOAL SETTINGS -->
 
-    <span>💰</span>
-    <small>Salary</small>
+      <div class="form-card">
 
-  </button>
+        <div class="section-header">
+
+          <div>
+
+            <h2>
+              Goal Settings
+            </h2>
+
+            <p>
+              Change your target anytime.
+            </p>
+
+          </div>
+
+        </div>
 
 
-  <button
-    class="nav-item"
-    data-page="settings"
-    onclick="showPage('settings', this)">
+        <label>
+          Goal Name
 
-    <span>⚙️</span>
-    <small>Settings</small>
+          <input
+            id="goalNameInput"
+            type="text"
+            placeholder="Emergency Fund"
+          >
 
-  </button>
+        </label>
 
-</nav>
+
+        <label>
+          Goal Amount (NT$)
+
+          <input
+            id="goalInput"
+            type="number"
+            placeholder="150000"
+          >
+
+        </label>
+
+
+        <label>
+          Target Date
+
+          <input
+            id="goalDate"
+            type="date"
+          >
+
+        </label>
+
+
+        <button
+          class="primary-btn"
+          id="saveGoal"
+        >
+          Save Goal
+        </button>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ================= SALARY ================= -->
+
+    <section id="salary" class="screen">
+
+      <div class="page-title">
+
+        <span class="label">
+          PAYDAY PLAN
+        </span>
+
+        <h1>
+          Salary Split 💰
+        </h1>
+
+        <p>
+          Automatically plan where your salary should go.
+        </p>
+
+      </div>
+
+
+      <div class="salary-card">
+
+        <span>
+          Monthly Salary
+        </span>
+
+        <div class="salary-input">
+
+          <b>NT$</b>
+
+          <input
+            id="salaryInput"
+            type="number"
+            placeholder="40000"
+          >
+
+        </div>
+
+        <p>
+          ≈ <b id="salaryPHPBig">₱0</b>
+        </p>
+
+      </div>
+
+
+      <div class="form-card">
+
+        <div class="allocation-header">
+
+          <div>
+
+            <h2>
+              Automatic Allocation
+            </h2>
+
+            <p>
+              Adjust the percentages.
+            </p>
+
+          </div>
+
+          <b id="allocationTotal">
+            100%
+          </b>
+
+        </div>
+
+
+        <!-- SAVINGS -->
+
+        <div class="allocation">
+
+          <div>
+
+            🏦 Savings
+
+            <b id="savePercent">
+              40%
+            </b>
+
+          </div>
+
+          <strong id="saveAmount">
+            NT$0
+          </strong>
+
+        </div>
+
+        <input
+          id="saveRange"
+          type="range"
+          min="0"
+          max="100"
+          value="40"
+        >
+
+
+        <!-- EXPENSE -->
+
+        <div class="allocation">
+
+          <div>
+
+            🍜 Expenses
+
+            <b id="expensePercent">
+              35%
+            </b>
+
+          </div>
+
+          <strong id="expenseAmount">
+            NT$0
+          </strong>
+
+        </div>
+
+        <input
+          id="expenseRange"
+          type="range"
+          min="0"
+          max="100"
+          value="35"
+        >
+
+
+        <!-- FAMILY -->
+
+        <div class="allocation">
+
+          <div>
+
+            🇵🇭 Family
+
+            <b id="familyPercent">
+              15%
+            </b>
+
+          </div>
+
+          <strong id="familyAmount">
+            NT$0
+          </strong>
+
+        </div>
+
+        <input
+          id="familyRange"
+          type="range"
+          min="0"
+          max="100"
+          value="15"
+        >
+
+
+        <!-- OTHERS -->
+
+        <div class="allocation">
+
+          <div>
+
+            📦 Others
+
+            <b id="otherPercent">
+              10%
+            </b>
+
+          </div>
+
+          <strong id="otherAmount">
+            NT$0
+          </strong>
+
+        </div>
+
+        <input
+          id="otherRange"
+          type="range"
+          min="0"
+          max="100"
+          value="10"
+        >
+
+
+        <div
+          id="allocationWarning"
+          class="warning hidden"
+        >
+          Your percentages must total exactly 100%.
+        </div>
+
+      </div>
+
+
+      <div class="tip">
+
+        💡
+
+        <div>
+
+          <b>
+            Tip for your Ipon
+          </b>
+
+          <p>
+            Save first when your salary arrives.
+            Spend what remains instead of saving what remains.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ================= MORE ================= -->
+
+    <section id="more" class="screen">
+
+      <div class="page-title">
+
+        <span class="label">
+          SETTINGS
+        </span>
+
+        <h1>
+          More ⚙️
+        </h1>
+
+        <p>
+          Customize your Taiwan Ipon tracker.
+        </p>
+
+      </div>
+
+
+      <div class="settings">
+
+        <!-- RATE -->
+
+        <div class="setting">
+
+          <div class="setting-icon">
+            💱
+          </div>
+
+          <div class="setting-content">
+
+            <b>
+              Exchange Rate
+            </b>
+
+            <span>
+              1 TWD to Philippine Peso
+            </span>
+
+            <div class="rate-box">
+
+              <span>
+                1 TWD = ₱
+              </span>
+
+              <input
+                id="rateInput"
+                type="number"
+                step="0.0001"
+              >
+
+            </div>
+
+            <button
+              class="small-btn"
+              id="saveRate"
+            >
+              Save Rate
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- DARK MODE -->
+
+        <button
+          class="setting clickable"
+          id="darkMode"
+        >
+
+          <div class="setting-icon">
+            🌙
+          </div>
+
+          <div class="setting-content">
+
+            <b>
+              Appearance
+            </b>
+
+            <span id="appearance">
+              Light Mode
+            </span>
+
+          </div>
+
+          <span>
+            ›
+          </span>
+
+        </button>
+
+
+        <!-- EXPORT -->
+
+        <button
+          class="setting clickable"
+          id="exportData"
+        >
+
+          <div class="setting-icon">
+            📤
+          </div>
+
+          <div class="setting-content">
+
+            <b>
+              Export Backup
+            </b>
+
+            <span>
+              Download your tracker data
+            </span>
+
+          </div>
+
+          <span>
+            ›
+          </span>
+
+        </button>
+
+
+        <!-- IMPORT -->
+
+        <label class="setting clickable">
+
+          <div class="setting-icon">
+            📥
+          </div>
+
+          <div class="setting-content">
+
+            <b>
+              Import Backup
+            </b>
+
+            <span>
+              Restore your previous data
+            </span>
+
+          </div>
+
+          <span>
+            ›
+          </span>
+
+          <input
+            id="importData"
+            type="file"
+            accept=".json"
+            hidden
+          >
+
+        </label>
+
+
+        <!-- RESET -->
+
+        <button
+          class="setting danger"
+          id="resetData"
+        >
+
+          <div class="setting-icon">
+            🗑️
+          </div>
+
+          <div class="setting-content">
+
+            <b>
+              Reset All Data
+            </b>
+
+            <span>
+              Delete all tracker data
+            </span>
+
+          </div>
+
+        </button>
+
+      </div>
+
+
+      <div class="security-note">
+
+        🔒 Your data is stored in your browser.
+
+        <br><br>
+
+        Never enter your bank password,
+        ATM PIN, OTP or card security code.
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <!-- ================= BOTTOM NAV ================= -->
+
+  <nav class="bottom-nav">
+
+    <button
+      class="nav active"
+      data-screen="home"
+    >
+      <span>⌂</span>
+      <small>Home</small>
+    </button>
+
+
+    <button
+      class="nav"
+      data-screen="activity"
+    >
+      <span>≡</span>
+      <small>Activity</small>
+    </button>
+
+
+    <button
+      class="nav"
+      data-screen="savings"
+    >
+      <span>◎</span>
+      <small>Ipon</small>
+    </button>
+
+
+    <button
+      class="nav"
+      data-screen="salary"
+    >
+      <span>₱</span>
+      <small>Salary</small>
+    </button>
+
+
+    <button
+      class="nav"
+      data-screen="more"
+    >
+      <span>☰</span>
+      <small>More</small>
+    </button>
+
+  </nav>
+
+</div>
 
 
 
@@ -917,123 +974,106 @@
 
 <div
   id="transactionModal"
-  class="modal">
+  class="modal"
+>
 
-  <div class="modal-content">
+  <div class="modal-box">
 
     <div class="modal-header">
 
       <div>
 
-        <p class="small-label">
-          NEW TRANSACTION
-        </p>
+        <span class="label">
+          NEW ACTIVITY
+        </span>
 
         <h2>
-          Add Money
+          Add Transaction
         </h2>
 
       </div>
 
       <button
-        class="close-btn"
-        onclick="closeTransaction()">
-
-        ✕
-
+        id="closeModal"
+        class="close"
+      >
+        ×
       </button>
 
     </div>
 
 
-    <form
-      id="transactionForm">
+    <div class="transaction-types">
 
-      <div class="input-group">
+      <button data-type="income">
+        💵 Income
+      </button>
 
-        <label>
-          Type
-        </label>
+      <button data-type="saving">
+        🏦 Save
+      </button>
 
-        <select
-          id="transactionType">
+      <button data-type="expense">
+        🍜 Expense
+      </button>
 
-          <option value="income">
-            💵 Income
-          </option>
+      <button data-type="family">
+        🇵🇭 Family
+      </button>
 
-          <option value="saving">
-            🏦 Savings
-          </option>
-
-          <option value="expense">
-            🍜 Expense
-          </option>
-
-          <option value="family">
-            🇵🇭 Family / PH
-          </option>
-
-          <option value="other">
-            📦 Others
-          </option>
-
-        </select>
-
-      </div>
+    </div>
 
 
-      <div class="input-group">
+    <form id="transactionForm">
 
-        <label>
-          Amount (NT$)
-        </label>
+      <label>
+
+        Amount (NT$)
 
         <input
           id="transactionAmount"
           type="number"
+          step="0.01"
           min="0"
           placeholder="1000"
-          required>
+          required
+        >
 
-      </div>
+      </label>
 
 
-      <div class="input-group">
+      <label>
 
-        <label>
-          Description
-        </label>
+        Description
 
         <input
           id="transactionDescription"
           type="text"
-          placeholder="Example: Salary"
-          required>
+          placeholder="Food / Salary / Remittance"
+          required
+        >
 
-      </div>
+      </label>
 
 
-      <div class="input-group">
+      <label>
 
-        <label>
-          Date
-        </label>
+        Date
 
         <input
           id="transactionDate"
           type="date"
-          required>
+          required
+        >
 
-      </div>
+      </label>
 
 
       <button
-        class="primary-button full"
-        type="submit">
-
+        class="primary-btn"
+        type="submit"
+      >
         Add Transaction
-
       </button>
 
     </form>
@@ -1043,12 +1083,12 @@
 </div>
 
 
+
 <div
   id="toast"
-  class="toast">
-
-  Saved successfully! ✅
-
+  class="toast"
+>
+  Saved! ✅
 </div>
 
 
