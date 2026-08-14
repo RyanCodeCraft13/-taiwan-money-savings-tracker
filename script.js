@@ -1,5 +1,9 @@
+/* =====================================================
+   TAIWAN IPON TRACKER V3
+   ===================================================== */
+
 const STORAGE_KEY =
-  "taiwanMoneySavingsTrackerV2";
+  "taiwanIponTrackerV3";
 
 
 let data =
@@ -7,9 +11,11 @@ let data =
     localStorage.getItem(STORAGE_KEY)
   ) || {
 
+    exchangeRate: 1.85,
+
     salary: 0,
 
-    savingPercent: 40,
+    savePercent: 40,
 
     expensePercent: 35,
 
@@ -17,18 +23,23 @@ let data =
 
     otherPercent: 10,
 
-    exchangeRate: 1.85,
+    goalName:
+      "My Taiwan Savings",
 
-    goal: 0,
+    goal: 150000,
 
-    targetDate: "",
+    goalDate: "",
 
     transactions: [],
 
-    darkMode: true
+    dark: false
 
   };
 
+
+/* =====================================================
+   HELPERS
+   ===================================================== */
 
 function saveData() {
 
@@ -40,7 +51,7 @@ function saveData() {
 }
 
 
-function moneyNT(value) {
+function nt(value) {
 
   return (
     "NT$" +
@@ -56,11 +67,14 @@ function moneyNT(value) {
 }
 
 
-function moneyPHP(value) {
+function php(value) {
 
   return (
     "₱" +
-    Number(value || 0)
+    Number(
+      (value || 0) *
+      data.exchangeRate
+    )
       .toLocaleString(
         "en-US",
         {
@@ -72,840 +86,46 @@ function moneyPHP(value) {
 }
 
 
-function toPHP(ntAmount) {
-
-  return (
-    Number(ntAmount || 0) *
-    Number(data.exchangeRate || 0)
-  );
-
-}
-
-
-function getEl(id) {
+function el(id) {
 
   return document.getElementById(id);
 
 }
 
 
+function today() {
 
-/* ================= CURRENCY ================= */
+  return new Date()
+    .toISOString()
+    .split("T")[0];
 
-function saveExchangeRate() {
+}
 
-  const rate =
-    Number(
-      getEl("exchangeRate").value
-    );
 
-  if (rate <= 0) {
+function showToast(message) {
 
-    alert(
-      "Please enter a valid exchange rate."
-    );
+  const toast =
+    el("toast");
 
-    return;
-  }
+  toast.textContent =
+    message;
 
-  data.exchangeRate = rate;
-
-  saveData();
-
-  updateCurrency();
-
-  updateDashboard();
-
-  calculateAllocation();
-
-  renderTransactions();
-
-  alert(
-    "Exchange rate updated!"
+  toast.classList.add(
+    "show"
   );
 
-}
+  setTimeout(() => {
 
-
-function updateCurrency() {
-
-  getEl("exchangeRate").value =
-    data.exchangeRate;
-
-  const nt =
-    Number(
-      getEl("convertNT").value
-    ) || 0;
-
-  getEl("convertedPHP").textContent =
-    moneyPHP(
-      toPHP(nt)
+    toast.classList.remove(
+      "show"
     );
+
+  }, 2200);
 
 }
 
 
-getEl("convertNT")
-  .addEventListener(
-    "input",
-    updateCurrency
-  );
-
-
-
-/* ================= SALARY ================= */
-
-function calculateAllocation() {
-
-  const salary =
-    Number(
-      getEl("salary").value
-    ) || 0;
-
-
-  const saving =
-    Number(
-      getEl("savingPercent").value
-    ) || 0;
-
-
-  const expense =
-    Number(
-      getEl("expensePercent").value
-    ) || 0;
-
-
-  const family =
-    Number(
-      getEl("familyPercent").value
-    ) || 0;
-
-
-  const other =
-    Number(
-      getEl("otherPercent").value
-    ) || 0;
-
-
-  const total =
-    saving +
-    expense +
-    family +
-    other;
-
-
-  if (total !== 100) {
-
-    getEl(
-      "percentWarning"
-    ).classList.remove(
-      "hidden"
-    );
-
-    return;
-  }
-
-
-  getEl(
-    "percentWarning"
-  ).classList.add(
-    "hidden"
-  );
-
-
-  data.salary = salary;
-
-  data.savingPercent = saving;
-
-  data.expensePercent = expense;
-
-  data.familyPercent = family;
-
-  data.otherPercent = other;
-
-
-  const savingAmount =
-    salary * saving / 100;
-
-  const expenseAmount =
-    salary * expense / 100;
-
-  const familyAmount =
-    salary * family / 100;
-
-  const otherAmount =
-    salary * other / 100;
-
-
-  getEl(
-    "savingAmount"
-  ).textContent =
-    moneyNT(
-      savingAmount
-    );
-
-  getEl(
-    "savingAmountPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        savingAmount
-      )
-    );
-
-
-  getEl(
-    "expenseAmount"
-  ).textContent =
-    moneyNT(
-      expenseAmount
-    );
-
-  getEl(
-    "expenseAmountPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        expenseAmount
-      )
-    );
-
-
-  getEl(
-    "familyAmount"
-  ).textContent =
-    moneyNT(
-      familyAmount
-    );
-
-  getEl(
-    "familyAmountPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        familyAmount
-      )
-    );
-
-
-  getEl(
-    "otherAmount"
-  ).textContent =
-    moneyNT(
-      otherAmount
-    );
-
-  getEl(
-    "otherAmountPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        otherAmount
-      )
-    );
-
-
-  saveData();
-
-  updateDashboard();
-
-}
-
-
-
-/* ================= GOAL ================= */
-
-function saveGoal() {
-
-  data.goal =
-    Number(
-      getEl("goal").value
-    ) || 0;
-
-
-  data.targetDate =
-    getEl("targetDate").value;
-
-
-  saveData();
-
-  updateDashboard();
-
-  alert(
-    "Savings goal saved!"
-  );
-
-}
-
-
-
-/* ================= TRANSACTIONS ================= */
-
-function addTransaction(event) {
-
-  event.preventDefault();
-
-
-  const date =
-    getEl(
-      "transactionDate"
-    ).value;
-
-
-  const description =
-    getEl(
-      "description"
-    ).value.trim();
-
-
-  const category =
-    getEl(
-      "category"
-    ).value;
-
-
-  const amount =
-    Number(
-      getEl("amount").value
-    );
-
-
-  if (
-    !date ||
-    !description ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Please complete all fields."
-    );
-
-    return;
-  }
-
-
-  data.transactions.unshift({
-
-    id: Date.now(),
-
-    date: date,
-
-    description: description,
-
-    category: category,
-
-    amount: amount
-
-  });
-
-
-  saveData();
-
-  getEl(
-    "transactionForm"
-  ).reset();
-
-
-  getEl(
-    "transactionDate"
-  ).value =
-    new Date()
-      .toISOString()
-      .split("T")[0];
-
-
-  renderTransactions();
-
-  updateDashboard();
-
-}
-
-
-function deleteTransaction(id) {
-
-  data.transactions =
-    data.transactions.filter(
-      transaction =>
-        transaction.id !== id
-    );
-
-
-  saveData();
-
-  renderTransactions();
-
-  updateDashboard();
-
-}
-
-
-function clearTransactions() {
-
-  if (
-    !confirm(
-      "Delete ALL transactions?"
-    )
-  ) {
-
-    return;
-  }
-
-
-  data.transactions = [];
-
-  saveData();
-
-  renderTransactions();
-
-  updateDashboard();
-
-}
-
-
-
-/* ================= TOTALS ================= */
-
-function calculateTotals() {
-
-  let income = 0;
-
-  let savings = 0;
-
-  let expenses = 0;
-
-
-  data.transactions.forEach(
-    transaction => {
-
-      if (
-        transaction.category ===
-        "income"
-      ) {
-
-        income +=
-          transaction.amount;
-
-      }
-
-
-      if (
-        transaction.category ===
-        "saving"
-      ) {
-
-        savings +=
-          transaction.amount;
-
-      }
-
-
-      if (
-        transaction.category ===
-          "expense" ||
-
-        transaction.category ===
-          "family" ||
-
-        transaction.category ===
-          "other"
-      ) {
-
-        expenses +=
-          transaction.amount;
-
-      }
-
-    }
-  );
-
-
-  return {
-
-    income,
-
-    savings,
-
-    expenses,
-
-    remaining:
-      income -
-      expenses -
-      savings
-
-  };
-
-}
-
-
-
-/* ================= DASHBOARD ================= */
-
-function updateDashboard() {
-
-  const totals =
-    calculateTotals();
-
-
-  getEl(
-    "totalIncome"
-  ).textContent =
-    moneyNT(
-      totals.income
-    );
-
-
-  getEl(
-    "totalIncomePHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        totals.income
-      )
-    );
-
-
-  getEl(
-    "totalExpenses"
-  ).textContent =
-    moneyNT(
-      totals.expenses
-    );
-
-
-  getEl(
-    "totalExpensesPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        totals.expenses
-      )
-    );
-
-
-  getEl(
-    "totalSavingsNT"
-  ).textContent =
-    moneyNT(
-      totals.savings
-    );
-
-
-  getEl(
-    "totalSavingsPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        totals.savings
-      )
-    );
-
-
-  getEl(
-    "remaining"
-  ).textContent =
-    moneyNT(
-      totals.remaining
-    );
-
-
-  getEl(
-    "remainingPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        totals.remaining
-      )
-    );
-
-
-  getEl(
-    "goalDisplay"
-  ).textContent =
-    "Goal: " +
-    moneyNT(
-      data.goal
-    );
-
-
-  getEl(
-    "goalNT"
-  ).textContent =
-    moneyNT(
-      data.goal
-    );
-
-
-  getEl(
-    "goalPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        data.goal
-      )
-    );
-
-
-  let percent = 0;
-
-
-  if (
-    data.goal > 0
-  ) {
-
-    percent =
-      (
-        totals.savings /
-        data.goal
-      ) * 100;
-
-  }
-
-
-  percent =
-    Math.min(
-      100,
-      percent
-    );
-
-
-  getEl(
-    "progressBar"
-  ).style.width =
-    percent + "%";
-
-
-  getEl(
-    "progressText"
-  ).textContent =
-    percent.toFixed(1) +
-    "% of goal";
-
-
-  const monthlyTarget =
-    data.salary *
-    data.savingPercent /
-    100;
-
-
-  const yearlyTarget =
-    monthlyTarget *
-    12;
-
-
-  getEl(
-    "monthlyTarget"
-  ).textContent =
-    moneyNT(
-      monthlyTarget
-    );
-
-
-  getEl(
-    "monthlyTargetPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        monthlyTarget
-      )
-    );
-
-
-  getEl(
-    "yearlyTarget"
-  ).textContent =
-    moneyNT(
-      yearlyTarget
-    );
-
-
-  getEl(
-    "yearlyTargetPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        yearlyTarget
-      )
-    );
-
-
-  getEl(
-    "challengeSaved"
-  ).textContent =
-    moneyNT(
-      totals.savings
-    );
-
-
-  getEl(
-    "challengeSavedPHP"
-  ).textContent =
-    moneyPHP(
-      toPHP(
-        totals.savings
-      )
-    );
-
-}
-
-
-
-/* ================= TRANSACTION LIST ================= */
-
-function renderTransactions() {
-
-  const list =
-    getEl(
-      "transactionList"
-    );
-
-
-  list.innerHTML = "";
-
-
-  if (
-    data.transactions.length ===
-    0
-  ) {
-
-    list.innerHTML = `
-
-      <tr>
-
-        <td colspan="6">
-
-          <span class="muted">
-
-            No transactions yet.
-
-          </span>
-
-        </td>
-
-      </tr>
-
-    `;
-
-    return;
-  }
-
-
-  data.transactions.forEach(
-    transaction => {
-
-      const row =
-        document.createElement(
-          "tr"
-        );
-
-
-      row.innerHTML = `
-
-        <td>
-          ${escapeHTML(
-            transaction.date
-          )}
-        </td>
-
-        <td>
-          ${escapeHTML(
-            transaction.description
-          )}
-        </td>
-
-        <td>
-
-          <span class="category">
-
-            ${categoryName(
-              transaction.category
-            )}
-
-          </span>
-
-        </td>
-
-        <td>
-          ${moneyNT(
-            transaction.amount
-          )}
-        </td>
-
-        <td>
-          ${moneyPHP(
-            toPHP(
-              transaction.amount
-            )
-          )}
-        </td>
-
-        <td>
-
-          <button
-
-            class="delete-btn"
-
-            onclick="
-              deleteTransaction(
-                ${transaction.id}
-              )
-            ">
-
-            ✕
-
-          </button>
-
-        </td>
-
-      `;
-
-
-      list.appendChild(
-        row
-      );
-
-    }
-  );
-
-}
-
-
-
-function categoryName(
-  category
-) {
-
-  const names = {
-
-    income:
-      "💵 Income",
-
-    saving:
-      "🏦 Savings",
-
-    expense:
-      "🍜 Expense",
-
-    family:
-      "🇵🇭 Family",
-
-    other:
-      "📦 Others"
-
-  };
-
-
-  return (
-    names[category] ||
-    category
-  );
-
-}
-
-
-
-function escapeHTML(
-  value
-) {
+function escapeHTML(value) {
 
   return String(value)
 
@@ -938,44 +158,1181 @@ function escapeHTML(
 
 
 
-/* ================= THEME ================= */
+/* =====================================================
+   NAVIGATION
+   ===================================================== */
 
-getEl(
-  "themeBtn"
+function showPage(
+  page,
+  button
+) {
+
+  document
+    .querySelectorAll(".page")
+    .forEach(
+      section =>
+        section.classList.remove(
+          "active"
+        )
+    );
+
+
+  const target =
+    el(page);
+
+  if (target) {
+
+    target.classList.add(
+      "active"
+    );
+
+  }
+
+
+  document
+    .querySelectorAll(".nav-item")
+    .forEach(
+      item =>
+        item.classList.remove(
+          "active"
+        )
+    );
+
+
+  if (button) {
+
+    button.classList.add(
+      "active"
+    );
+
+  }
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+
+/* =====================================================
+   TRANSACTION MODAL
+   ===================================================== */
+
+function openTransaction(
+  type = "expense"
+) {
+
+  el(
+    "transactionType"
+  ).value = type;
+
+
+  el(
+    "transactionAmount"
+  ).value = "";
+
+
+  el(
+    "transactionDescription"
+  ).value = "";
+
+
+  el(
+    "transactionDate"
+  ).value =
+    today();
+
+
+  el(
+    "transactionModal"
+  ).classList.add(
+    "show"
+  );
+
+
+  setTimeout(() => {
+
+    el(
+      "transactionAmount"
+    ).focus();
+
+  }, 200);
+
+}
+
+
+function closeTransaction() {
+
+  el(
+    "transactionModal"
+  ).classList.remove(
+    "show"
+  );
+
+}
+
+
+
+/* =====================================================
+   ADD TRANSACTION
+   ===================================================== */
+
+el(
+  "transactionForm"
 )
 .addEventListener(
-  "click",
-  function() {
+  "submit",
+  function(event) {
 
-    data.darkMode =
-      !data.darkMode;
+    event.preventDefault();
 
 
-    document.body
-      .classList.toggle(
-        "light",
-        !data.darkMode
+    const type =
+      el(
+        "transactionType"
+      ).value;
+
+
+    const amount =
+      Number(
+        el(
+          "transactionAmount"
+        ).value
       );
 
 
-    this.textContent =
-      data.darkMode
-        ? "☀️"
-        : "🌙";
+    const description =
+      el(
+        "transactionDescription"
+      )
+      .value
+      .trim();
+
+
+    const date =
+      el(
+        "transactionDate"
+      ).value;
+
+
+    if (
+      amount <= 0 ||
+      !description ||
+      !date
+    ) {
+
+      alert(
+        "Please complete all fields."
+      );
+
+      return;
+
+    }
+
+
+    data.transactions.unshift({
+
+      id:
+        Date.now(),
+
+      type:
+        type,
+
+      amount:
+        amount,
+
+      description:
+        description,
+
+      date:
+        date
+
+    });
 
 
     saveData();
+
+    closeTransaction();
+
+    renderTransactions();
+
+    updateAll();
+
+    showToast(
+      "Transaction added! ✅"
+    );
 
   }
 );
 
 
 
-/* ================= BACKUP ================= */
+/* =====================================================
+   TOTALS
+   ===================================================== */
+
+function getTotals() {
+
+  let income = 0;
+
+  let savings = 0;
+
+  let expenses = 0;
+
+
+  data.transactions
+    .forEach(
+      transaction => {
+
+        if (
+          transaction.type ===
+          "income"
+        ) {
+
+          income +=
+            transaction.amount;
+
+        }
+
+
+        if (
+          transaction.type ===
+          "saving"
+        ) {
+
+          savings +=
+            transaction.amount;
+
+        }
+
+
+        if (
+          [
+            "expense",
+            "family",
+            "other"
+          ]
+          .includes(
+            transaction.type
+          )
+        ) {
+
+          expenses +=
+            transaction.amount;
+
+        }
+
+      }
+    );
+
+
+  return {
+
+    income,
+
+    savings,
+
+    expenses,
+
+    remaining:
+      income -
+      savings -
+      expenses
+
+  };
+
+}
+
+
+
+/* =====================================================
+   HOME
+   ===================================================== */
+
+function updateHome() {
+
+  const totals =
+    getTotals();
+
+
+  el(
+    "homeSavingsNT"
+  ).textContent =
+    nt(
+      totals.savings
+    );
+
+
+  el(
+    "homeSavingsPHP"
+  ).textContent =
+    php(
+      totals.savings
+    );
+
+
+  el(
+    "homeIncome"
+  ).textContent =
+    nt(
+      totals.income
+    );
+
+
+  el(
+    "homeIncomePHP"
+  ).textContent =
+    php(
+      totals.income
+    );
+
+
+  el(
+    "homeExpenses"
+  ).textContent =
+    nt(
+      totals.expenses
+    );
+
+
+  el(
+    "homeExpensesPHP"
+  ).textContent =
+    php(
+      totals.expenses
+    );
+
+
+  const month =
+    new Date()
+      .toISOString()
+      .slice(0, 7);
+
+
+  const monthlySavings =
+    data.transactions
+
+      .filter(
+        t =>
+          t.type ===
+            "saving" &&
+          t.date.startsWith(
+            month
+          )
+      )
+
+      .reduce(
+        (sum, t) =>
+          sum + t.amount,
+        0
+      );
+
+
+  el(
+    "homeMonthSaving"
+  ).textContent =
+    nt(
+      monthlySavings
+    );
+
+
+  el(
+    "homeMonthSavingPHP"
+  ).textContent =
+    php(
+      monthlySavings
+    );
+
+
+  const percent =
+    data.goal > 0
+      ? Math.min(
+          100,
+          (
+            totals.savings /
+            data.goal
+          ) * 100
+        )
+      : 0;
+
+
+  el(
+    "homeProgress"
+  ).style.width =
+    percent + "%";
+
+
+  el(
+    "homeGoalPercent"
+  ).textContent =
+    percent.toFixed(0) +
+    "%";
+
+
+  el(
+    "homeSavedSmall"
+  ).textContent =
+    nt(
+      totals.savings
+    );
+
+
+  el(
+    "homeGoalSmall"
+  ).textContent =
+    nt(
+      data.goal
+    );
+
+
+  el(
+    "topRate"
+  ).textContent =
+    Number(
+      data.exchangeRate
+    ).toFixed(4);
+
+
+  let message =
+    "Start your savings journey today!";
+
+
+  if (
+    percent >= 100
+  ) {
+
+    message =
+      "Amazing! You reached your goal! 🎉";
+
+  } else if (
+    percent >= 75
+  ) {
+
+    message =
+      "Almost there! Keep saving! 🔥";
+
+  } else if (
+    percent >= 50
+  ) {
+
+    message =
+      "Halfway there! Don't stop now! 💪";
+
+  } else if (
+    percent >= 25
+  ) {
+
+    message =
+      "Great start! Keep building your ipon! 🌱";
+
+  }
+
+
+  el(
+    "challengeMessage"
+  ).textContent =
+    message;
+
+}
+
+
+
+/* =====================================================
+   GOAL
+   ===================================================== */
+
+function updateGoal() {
+
+  const totals =
+    getTotals();
+
+
+  const percent =
+    data.goal > 0
+      ? Math.min(
+          100,
+          (
+            totals.savings /
+            data.goal
+          ) * 100
+        )
+      : 0;
+
+
+  el(
+    "goalCirclePercent"
+  ).textContent =
+    percent.toFixed(0) +
+    "%";
+
+
+  const degrees =
+    percent * 3.6;
+
+
+  el(
+    "goalCircle"
+  );
+
+
+  const circle =
+    document.querySelector(
+      ".goal-circle"
+    );
+
+
+  if (circle) {
+
+    circle.style.background =
+      `conic-gradient(
+        #22c55e ${degrees}deg,
+        rgba(255,255,255,.15)
+        ${degrees}deg
+      )`;
+
+  }
+
+
+  el(
+    "goalTitle"
+  ).textContent =
+    data.goalName ||
+    "My Taiwan Savings";
+
+
+  el(
+    "goalAmount"
+  ).textContent =
+    nt(
+      data.goal
+    );
+
+
+  el(
+    "goalPHP"
+  ).textContent =
+    php(
+      data.goal
+    );
+
+}
+
+
+
+/* =====================================================
+   SAVE GOAL
+   ===================================================== */
+
+function saveGoal() {
+
+  const name =
+    el(
+      "goalName"
+    ).value.trim();
+
+
+  const amount =
+    Number(
+      el(
+        "goalInput"
+      ).value
+    );
+
+
+  const date =
+    el(
+      "goalDate"
+    ).value;
+
+
+  if (
+    amount <= 0
+  ) {
+
+    alert(
+      "Please enter a valid goal amount."
+    );
+
+    return;
+
+  }
+
+
+  data.goalName =
+    name ||
+    "My Taiwan Savings";
+
+
+  data.goal =
+    amount;
+
+
+  data.goalDate =
+    date;
+
+
+  saveData();
+
+  updateGoal();
+
+  updateHome();
+
+  showToast(
+    "Savings goal saved! 🎯"
+  );
+
+}
+
+
+
+/* =====================================================
+   SALARY
+   ===================================================== */
+
+function updateSalary() {
+
+  const salary =
+    Number(
+      el(
+        "salaryInput"
+      ).value
+    ) || 0;
+
+
+  data.salary =
+    salary;
+
+
+  el(
+    "salaryPHP"
+  ).textContent =
+    php(
+      salary
+    );
+
+
+  const save =
+    Number(
+      el(
+        "savePercent"
+      ).value
+    );
+
+
+  const expense =
+    Number(
+      el(
+        "expensePercent"
+      ).value
+    );
+
+
+  const family =
+    Number(
+      el(
+        "familyPercent"
+      ).value
+    );
+
+
+  const other =
+    Number(
+      el(
+        "otherPercent"
+      ).value
+    );
+
+
+  const total =
+    save +
+    expense +
+    family +
+    other;
+
+
+  el(
+    "allocationTotal"
+  ).textContent =
+    total + "%";
+
+
+  el(
+    "savePercentText"
+  ).textContent =
+    save + "%";
+
+
+  el(
+    "expensePercentText"
+  ).textContent =
+    expense + "%";
+
+
+  el(
+    "familyPercentText"
+  ).textContent =
+    family + "%";
+
+
+  el(
+    "otherPercentText"
+  ).textContent =
+    other + "%";
+
+
+  el(
+    "saveAmount"
+  ).textContent =
+    nt(
+      salary *
+      save / 100
+    );
+
+
+  el(
+    "expenseAmount"
+  ).textContent =
+    nt(
+      salary *
+      expense / 100
+    );
+
+
+  el(
+    "familyAmount"
+  ).textContent =
+    nt(
+      salary *
+      family / 100
+    );
+
+
+  el(
+    "otherAmount"
+  ).textContent =
+    nt(
+      salary *
+      other / 100
+    );
+
+
+  if (
+    total === 100
+  ) {
+
+    el(
+      "allocationWarning"
+    )
+    .classList.add(
+      "hidden"
+    );
+
+  } else {
+
+    el(
+      "allocationWarning"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  data.savePercent =
+    save;
+
+  data.expensePercent =
+    expense;
+
+  data.familyPercent =
+    family;
+
+  data.otherPercent =
+    other;
+
+
+  saveData();
+
+}
+
+
+[
+  "salaryInput",
+  "savePercent",
+  "expensePercent",
+  "familyPercent",
+  "otherPercent"
+]
+.forEach(
+  id => {
+
+    el(id)
+      .addEventListener(
+        "input",
+        updateSalary
+      );
+
+  }
+);
+
+
+
+/* =====================================================
+   TRANSACTIONS LIST
+   ===================================================== */
+
+let currentFilter =
+  "all";
+
+
+function filterTransactions(
+  filter,
+  button
+) {
+
+  currentFilter =
+    filter;
+
+
+  document
+    .querySelectorAll(
+      ".filter"
+    )
+    .forEach(
+      item =>
+        item.classList.remove(
+          "active"
+        )
+    );
+
+
+  if (button) {
+
+    button.classList.add(
+      "active"
+    );
+
+  }
+
+
+  renderTransactions();
+
+}
+
+
+function getTransactionIcon(
+  type
+) {
+
+  const icons = {
+
+    income: "💵",
+
+    saving: "🏦",
+
+    expense: "🍜",
+
+    family: "🇵🇭",
+
+    other: "📦"
+
+  };
+
+
+  return (
+    icons[type] ||
+    "💰"
+  );
+
+}
+
+
+function getTransactionName(
+  type
+) {
+
+  const names = {
+
+    income: "Income",
+
+    saving: "Savings",
+
+    expense: "Expense",
+
+    family: "Family / PH",
+
+    other: "Others"
+
+  };
+
+
+  return (
+    names[type] ||
+    type
+  );
+
+}
+
+
+function renderTransactions() {
+
+  const container =
+    el(
+      "transactionList"
+    );
+
+
+  let transactions =
+    data.transactions;
+
+
+  if (
+    currentFilter !==
+    "all"
+  ) {
+
+    transactions =
+      transactions.filter(
+        t =>
+          t.type ===
+          currentFilter
+      );
+
+  }
+
+
+  if (
+    transactions.length ===
+    0
+  ) {
+
+    container.innerHTML = `
+
+      <div class="friendly-card">
+
+        <div class="friendly-icon">
+          📭
+        </div>
+
+        <div class="friendly-content">
+
+          <h3>
+            No transactions yet
+          </h3>
+
+          <p>
+            Add your first transaction
+            to start tracking.
+          </p>
+
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    transactions
+      .map(
+        transaction => {
+
+          const positive =
+            [
+              "income",
+              "saving"
+            ]
+            .includes(
+              transaction.type
+            );
+
+
+          return `
+
+            <div class="transaction">
+
+              <div class="transaction-icon">
+
+                ${getTransactionIcon(
+                  transaction.type
+                )}
+
+              </div>
+
+
+              <div class="transaction-info">
+
+                <strong>
+
+                  ${escapeHTML(
+                    transaction.description
+                  )}
+
+                </strong>
+
+                <small>
+
+                  ${escapeHTML(
+                    transaction.date
+                  )}
+                  •
+                  ${getTransactionName(
+                    transaction.type
+                  )}
+
+                </small>
+
+              </div>
+
+
+              <div class="transaction-money">
+
+                <strong
+                  class="${
+                    positive
+                      ? "positive"
+                      : "negative"
+                  }">
+
+                  ${
+                    positive
+                      ? "+"
+                      : "-"
+                  }
+                  ${nt(
+                    transaction.amount
+                  )}
+
+                </strong>
+
+                <small>
+
+                  ${php(
+                    transaction.amount
+                  )}
+
+                </small>
+
+              </div>
+
+
+              <button
+                class="delete-transaction"
+                onclick="
+                  deleteTransaction(
+                    ${transaction.id}
+                  )
+                ">
+
+                ✕
+
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+function deleteTransaction(
+  id
+) {
+
+  if (
+    !confirm(
+      "Delete this transaction?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  data.transactions =
+    data.transactions.filter(
+      transaction =>
+        transaction.id !== id
+    );
+
+
+  saveData();
+
+  renderTransactions();
+
+  updateAll();
+
+  showToast(
+    "Transaction deleted."
+  );
+
+}
+
+
+
+/* =====================================================
+   RATE
+   ===================================================== */
+
+function saveRate() {
+
+  const rate =
+    Number(
+      el(
+        "rateInput"
+      ).value
+    );
+
+
+  if (
+    rate <= 0
+  ) {
+
+    alert(
+      "Please enter a valid exchange rate."
+    );
+
+    return;
+
+  }
+
+
+  data.exchangeRate =
+    rate;
+
+
+  saveData();
+
+  updateAll();
+
+  showToast(
+    "Exchange rate updated! 💱"
+  );
+
+}
+
+
+
+/* =====================================================
+   BACKUP
+   ===================================================== */
 
 function exportData() {
 
-  const backup =
+  const json =
     JSON.stringify(
       data,
       null,
@@ -985,7 +1342,7 @@ function exportData() {
 
   const blob =
     new Blob(
-      [backup],
+      [json],
       {
         type:
           "application/json"
@@ -1005,10 +1362,12 @@ function exportData() {
     );
 
 
-  link.href = url;
+  link.href =
+    url;
+
 
   link.download =
-    "taiwan-money-tracker-backup.json";
+    "taiwan-ipon-backup.json";
 
 
   link.click();
@@ -1018,98 +1377,114 @@ function exportData() {
     url
   );
 
-}
 
-
-
-function importData(file) {
-
-  const reader =
-    new FileReader();
-
-
-  reader.onload =
-    function(event) {
-
-      try {
-
-        const imported =
-          JSON.parse(
-            event.target.result
-          );
-
-
-        data = imported;
-
-
-        saveData();
-
-        loadSettings();
-
-        updateCurrency();
-
-        calculateAllocation();
-
-        renderTransactions();
-
-        updateDashboard();
-
-
-        alert(
-          "Backup imported successfully!"
-        );
-
-
-      } catch {
-
-        alert(
-          "Invalid backup file."
-        );
-
-      }
-
-    };
-
-
-  reader.readAsText(
-    file
+  showToast(
+    "Backup exported! 📤"
   );
 
 }
 
 
-
-getEl(
+el(
   "importFile"
 )
 .addEventListener(
   "change",
   function() {
 
-    if (
-      this.files[0]
-    ) {
+    const file =
+      this.files[0];
 
-      importData(
-        this.files[0]
-      );
+
+    if (!file) {
+
+      return;
 
     }
+
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload =
+      function(event) {
+
+        try {
+
+          const imported =
+            JSON.parse(
+              event.target.result
+            );
+
+
+          if (
+            !imported ||
+            !Array.isArray(
+              imported.transactions
+            )
+          ) {
+
+            throw new Error(
+              "Invalid"
+            );
+
+          }
+
+
+          data =
+            imported;
+
+
+          saveData();
+
+          loadSettings();
+
+          updateAll();
+
+          renderTransactions();
+
+
+          showToast(
+            "Backup restored! 📥"
+          );
+
+        } catch {
+
+          alert(
+            "Invalid backup file."
+          );
+
+        }
+
+      };
+
+
+    reader.readAsText(
+      file
+    );
 
   }
 );
 
 
 
-function resetAll() {
+/* =====================================================
+   RESET
+   ===================================================== */
 
-  if (
-    !confirm(
-      "This will delete ALL tracker data. Continue?"
-    )
-  ) {
+function resetApp() {
+
+  const answer =
+    confirm(
+      "Are you sure you want to delete ALL your tracker data?"
+    );
+
+
+  if (!answer) {
 
     return;
+
   }
 
 
@@ -1124,93 +1499,143 @@ function resetAll() {
 
 
 
-/* ================= LOAD ================= */
+/* =====================================================
+   THEME
+   ===================================================== */
+
+function updateTheme() {
+
+  document.body
+    .classList.toggle(
+      "dark",
+      data.dark
+    );
+
+
+  el(
+    "themeBtn"
+  ).textContent =
+    data.dark
+      ? "☀️"
+      : "🌙";
+
+}
+
+
+el(
+  "themeBtn"
+)
+.addEventListener(
+  "click",
+  function() {
+
+    data.dark =
+      !data.dark;
+
+
+    saveData();
+
+    updateTheme();
+
+  }
+);
+
+
+
+/* =====================================================
+   LOAD SETTINGS
+   ===================================================== */
 
 function loadSettings() {
 
-  getEl(
-    "salary"
+  el(
+    "rateInput"
+  ).value =
+    data.exchangeRate;
+
+
+  el(
+    "salaryInput"
   ).value =
     data.salary || "";
 
 
-  getEl(
-    "savingPercent"
+  el(
+    "savePercent"
   ).value =
-    data.savingPercent;
+    data.savePercent;
 
 
-  getEl(
+  el(
     "expensePercent"
   ).value =
     data.expensePercent;
 
 
-  getEl(
+  el(
     "familyPercent"
   ).value =
     data.familyPercent;
 
 
-  getEl(
+  el(
     "otherPercent"
   ).value =
     data.otherPercent;
 
 
-  getEl(
-    "exchangeRate"
+  el(
+    "goalName"
   ).value =
-    data.exchangeRate;
+    data.goalName;
 
 
-  getEl(
-    "goal"
+  el(
+    "goalInput"
   ).value =
-    data.goal || "";
+    data.goal;
 
 
-  getEl(
-    "targetDate"
+  el(
+    "goalDate"
   ).value =
-    data.targetDate || "";
+    data.goalDate || "";
 
 
-  document.body
-    .classList.toggle(
-      "light",
-      !data.darkMode
-    );
-
-
-  getEl(
-    "themeBtn"
-  ).textContent =
-    data.darkMode
-      ? "☀️"
-      : "🌙";
-
-
-
-  getEl(
+  el(
     "transactionDate"
   ).value =
-    new Date()
-      .toISOString()
-      .split("T")[0];
+    today();
+
+
+  updateTheme();
 
 }
 
 
 
-/* ================= START APP ================= */
+/* =====================================================
+   UPDATE EVERYTHING
+   ===================================================== */
+
+function updateAll() {
+
+  updateHome();
+
+  updateGoal();
+
+  updateSalary();
+
+  renderTransactions();
+
+}
+
+
+
+/* =====================================================
+   START
+   ===================================================== */
 
 loadSettings();
 
-updateCurrency();
-
-renderTransactions();
-
-updateDashboard();
-
-calculateAllocation();
+updateAll();
