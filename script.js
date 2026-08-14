@@ -1,21 +1,26 @@
-/* =====================================================
-   TAIWAN IPON TRACKER V3
-   ===================================================== */
+/* =========================================
+   TAIWAN IPON
+   Salary + Savings + Expense Tracker
+========================================= */
 
-const STORAGE_KEY =
-  "taiwanIponTrackerV3";
+const STORAGE_KEY = "taiwan_ipon_v1";
 
+
+/* =========================================
+   DEFAULT DATA
+========================================= */
 
 let data =
   JSON.parse(
     localStorage.getItem(STORAGE_KEY)
-  ) || {
+  ) ||
+  {
 
     exchangeRate: 1.85,
 
     salary: 0,
 
-    savePercent: 40,
+    savingsPercent: 40,
 
     expensePercent: 35,
 
@@ -23,23 +28,29 @@ let data =
 
     otherPercent: 10,
 
-    goalName:
-      "My Taiwan Savings",
+    goalName: "My Taiwan Savings",
 
-    goal: 150000,
+    goalAmount: 150000,
 
     goalDate: "",
 
-    transactions: [],
+    darkMode: false,
 
-    dark: false
+    hideBalance: false,
+
+    transactions: []
 
   };
 
 
-/* =====================================================
+let currentTransactionType = "expense";
+
+let currentFilter = "all";
+
+
+/* =========================================
    HELPERS
-   ===================================================== */
+========================================= */
 
 function saveData() {
 
@@ -51,11 +62,18 @@ function saveData() {
 }
 
 
-function nt(value) {
+function $(id) {
+
+  return document.getElementById(id);
+
+}
+
+
+function formatNT(amount) {
 
   return (
     "NT$" +
-    Number(value || 0)
+    Number(amount || 0)
       .toLocaleString(
         "en-US",
         {
@@ -67,28 +85,22 @@ function nt(value) {
 }
 
 
-function php(value) {
+function formatPHP(amount) {
 
   return (
     "₱" +
-    Number(
-      (value || 0) *
+    (
+      Number(amount || 0)
+      *
       data.exchangeRate
     )
-      .toLocaleString(
-        "en-US",
-        {
-          maximumFractionDigits: 2
-        }
-      )
+    .toLocaleString(
+      "en-US",
+      {
+        maximumFractionDigits: 2
+      }
+    )
   );
-
-}
-
-
-function el(id) {
-
-  return document.getElementById(id);
 
 }
 
@@ -102,83 +114,143 @@ function today() {
 }
 
 
-function showToast(message) {
+/* =========================================
+   TOTALS
+========================================= */
 
-  const toast =
-    el("toast");
+function getTotals() {
 
-  toast.textContent =
-    message;
+  let income = 0;
 
-  toast.classList.add(
-    "show"
+  let savings = 0;
+
+  let expenses = 0;
+
+  let family = 0;
+
+  let others = 0;
+
+
+  data.transactions.forEach(
+    transaction => {
+
+      if (
+        transaction.type === "income"
+      ) {
+
+        income += transaction.amount;
+
+      }
+
+
+      if (
+        transaction.type === "saving"
+      ) {
+
+        savings += transaction.amount;
+
+      }
+
+
+      if (
+        transaction.type === "expense"
+      ) {
+
+        expenses += transaction.amount;
+
+      }
+
+
+      if (
+        transaction.type === "family"
+      ) {
+
+        family += transaction.amount;
+
+      }
+
+
+      if (
+        transaction.type === "other"
+      ) {
+
+        others += transaction.amount;
+
+      }
+
+    }
   );
 
-  setTimeout(() => {
 
-    toast.classList.remove(
-      "show"
-    );
+  return {
 
-  }, 2200);
+    income,
 
-}
+    savings,
 
+    expenses,
 
-function escapeHTML(value) {
+    family,
 
-  return String(value)
+    others
 
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+  };
 
 }
 
 
+/* =========================================
+   TOAST
+========================================= */
 
-/* =====================================================
+function showToast(message) {
+
+  const toast = $("toast");
+
+  toast.textContent = message;
+
+  toast.classList.add("show");
+
+
+  clearTimeout(
+    window.toastTimer
+  );
+
+
+  window.toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      2200
+    );
+
+}
+
+
+/* =========================================
    NAVIGATION
-   ===================================================== */
+========================================= */
 
-function showPage(
-  page,
-  button
-) {
+function showScreen(screenName) {
 
   document
-    .querySelectorAll(".page")
+    .querySelectorAll(".screen")
     .forEach(
-      section =>
-        section.classList.remove(
+      screen =>
+        screen.classList.remove(
           "active"
         )
     );
 
 
   const target =
-    el(page);
+    $(screenName);
+
 
   if (target) {
 
@@ -190,949 +262,243 @@ function showPage(
 
 
   document
-    .querySelectorAll(".nav-item")
+    .querySelectorAll(".nav")
     .forEach(
-      item =>
-        item.classList.remove(
-          "active"
-        )
-    );
-
-
-  if (button) {
-
-    button.classList.add(
-      "active"
-    );
-
-  }
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-
-}
-
-
-
-/* =====================================================
-   TRANSACTION MODAL
-   ===================================================== */
-
-function openTransaction(
-  type = "expense"
-) {
-
-  el(
-    "transactionType"
-  ).value = type;
-
-
-  el(
-    "transactionAmount"
-  ).value = "";
-
-
-  el(
-    "transactionDescription"
-  ).value = "";
-
-
-  el(
-    "transactionDate"
-  ).value =
-    today();
-
-
-  el(
-    "transactionModal"
-  ).classList.add(
-    "show"
-  );
-
-
-  setTimeout(() => {
-
-    el(
-      "transactionAmount"
-    ).focus();
-
-  }, 200);
-
-}
-
-
-function closeTransaction() {
-
-  el(
-    "transactionModal"
-  ).classList.remove(
-    "show"
-  );
-
-}
-
-
-
-/* =====================================================
-   ADD TRANSACTION
-   ===================================================== */
-
-el(
-  "transactionForm"
-)
-.addEventListener(
-  "submit",
-  function(event) {
-
-    event.preventDefault();
-
-
-    const type =
-      el(
-        "transactionType"
-      ).value;
-
-
-    const amount =
-      Number(
-        el(
-          "transactionAmount"
-        ).value
-      );
-
-
-    const description =
-      el(
-        "transactionDescription"
-      )
-      .value
-      .trim();
-
-
-    const date =
-      el(
-        "transactionDate"
-      ).value;
-
-
-    if (
-      amount <= 0 ||
-      !description ||
-      !date
-    ) {
-
-      alert(
-        "Please complete all fields."
-      );
-
-      return;
-
-    }
-
-
-    data.transactions.unshift({
-
-      id:
-        Date.now(),
-
-      type:
-        type,
-
-      amount:
-        amount,
-
-      description:
-        description,
-
-      date:
-        date
-
-    });
-
-
-    saveData();
-
-    closeTransaction();
-
-    renderTransactions();
-
-    updateAll();
-
-    showToast(
-      "Transaction added! ✅"
-    );
-
-  }
-);
-
-
-
-/* =====================================================
-   TOTALS
-   ===================================================== */
-
-function getTotals() {
-
-  let income = 0;
-
-  let savings = 0;
-
-  let expenses = 0;
-
-
-  data.transactions
-    .forEach(
-      transaction => {
-
-        if (
-          transaction.type ===
-          "income"
-        ) {
-
-          income +=
-            transaction.amount;
-
-        }
-
-
-        if (
-          transaction.type ===
-          "saving"
-        ) {
-
-          savings +=
-            transaction.amount;
-
-        }
-
-
-        if (
-          [
-            "expense",
-            "family",
-            "other"
-          ]
-          .includes(
-            transaction.type
-          )
-        ) {
-
-          expenses +=
-            transaction.amount;
-
-        }
+      button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.screen ===
+          screenName
+        );
 
       }
     );
 
 
-  return {
-
-    income,
-
-    savings,
-
-    expenses,
-
-    remaining:
-      income -
-      savings -
-      expenses
-
-  };
+  window.scrollTo(
+    {
+      top: 0,
+      behavior: "smooth"
+    }
+  );
 
 }
 
 
+document
+  .querySelectorAll(".nav")
+  .forEach(
+    button => {
 
-/* =====================================================
-   HOME
-   ===================================================== */
+      button.addEventListener(
+        "click",
+        () => {
 
-function updateHome() {
+          showScreen(
+            button.dataset.screen
+          );
 
-  const totals =
-    getTotals();
-
-
-  el(
-    "homeSavingsNT"
-  ).textContent =
-    nt(
-      totals.savings
-    );
-
-
-  el(
-    "homeSavingsPHP"
-  ).textContent =
-    php(
-      totals.savings
-    );
-
-
-  el(
-    "homeIncome"
-  ).textContent =
-    nt(
-      totals.income
-    );
-
-
-  el(
-    "homeIncomePHP"
-  ).textContent =
-    php(
-      totals.income
-    );
-
-
-  el(
-    "homeExpenses"
-  ).textContent =
-    nt(
-      totals.expenses
-    );
-
-
-  el(
-    "homeExpensesPHP"
-  ).textContent =
-    php(
-      totals.expenses
-    );
-
-
-  const month =
-    new Date()
-      .toISOString()
-      .slice(0, 7);
-
-
-  const monthlySavings =
-    data.transactions
-
-      .filter(
-        t =>
-          t.type ===
-            "saving" &&
-          t.date.startsWith(
-            month
-          )
-      )
-
-      .reduce(
-        (sum, t) =>
-          sum + t.amount,
-        0
+        }
       );
 
-
-  el(
-    "homeMonthSaving"
-  ).textContent =
-    nt(
-      monthlySavings
-    );
+    }
+  );
 
 
-  el(
-    "homeMonthSavingPHP"
-  ).textContent =
-    php(
-      monthlySavings
-    );
+/* =========================================
+   HOME
+========================================= */
 
-
-  const percent =
-    data.goal > 0
-      ? Math.min(
-          100,
-          (
-            totals.savings /
-            data.goal
-          ) * 100
-        )
-      : 0;
-
-
-  el(
-    "homeProgress"
-  ).style.width =
-    percent + "%";
-
-
-  el(
-    "homeGoalPercent"
-  ).textContent =
-    percent.toFixed(0) +
-    "%";
-
-
-  el(
-    "homeSavedSmall"
-  ).textContent =
-    nt(
-      totals.savings
-    );
-
-
-  el(
-    "homeGoalSmall"
-  ).textContent =
-    nt(
-      data.goal
-    );
-
-
-  el(
-    "topRate"
-  ).textContent =
-    Number(
-      data.exchangeRate
-    ).toFixed(4);
-
-
-  let message =
-    "Start your savings journey today!";
-
-
-  if (
-    percent >= 100
-  ) {
-
-    message =
-      "Amazing! You reached your goal! 🎉";
-
-  } else if (
-    percent >= 75
-  ) {
-
-    message =
-      "Almost there! Keep saving! 🔥";
-
-  } else if (
-    percent >= 50
-  ) {
-
-    message =
-      "Halfway there! Don't stop now! 💪";
-
-  } else if (
-    percent >= 25
-  ) {
-
-    message =
-      "Great start! Keep building your ipon! 🌱";
-
-  }
-
-
-  el(
-    "challengeMessage"
-  ).textContent =
-    message;
-
-}
-
-
-
-/* =====================================================
-   GOAL
-   ===================================================== */
-
-function updateGoal() {
+function renderHome() {
 
   const totals =
     getTotals();
 
 
-  const percent =
-    data.goal > 0
-      ? Math.min(
-          100,
-          (
-            totals.savings /
-            data.goal
-          ) * 100
-        )
-      : 0;
+  const saved =
+    totals.savings;
 
 
-  el(
-    "goalCirclePercent"
-  ).textContent =
-    percent.toFixed(0) +
-    "%";
+  const percentage =
+    data.goalAmount > 0
+      ?
+      Math.min(
+        100,
+        (saved / data.goalAmount) * 100
+      )
+      :
+      0;
 
 
-  const degrees =
-    percent * 3.6;
+  /* Balance */
 
+  if (data.hideBalance) {
 
-  el(
-    "goalCircle"
-  );
+    $("totalSavings").textContent =
+      "••••••";
 
-
-  const circle =
-    document.querySelector(
-      ".goal-circle"
-    );
-
-
-  if (circle) {
-
-    circle.style.background =
-      `conic-gradient(
-        #22c55e ${degrees}deg,
-        rgba(255,255,255,.15)
-        ${degrees}deg
-      )`;
-
-  }
-
-
-  el(
-    "goalTitle"
-  ).textContent =
-    data.goalName ||
-    "My Taiwan Savings";
-
-
-  el(
-    "goalAmount"
-  ).textContent =
-    nt(
-      data.goal
-    );
-
-
-  el(
-    "goalPHP"
-  ).textContent =
-    php(
-      data.goal
-    );
-
-}
-
-
-
-/* =====================================================
-   SAVE GOAL
-   ===================================================== */
-
-function saveGoal() {
-
-  const name =
-    el(
-      "goalName"
-    ).value.trim();
-
-
-  const amount =
-    Number(
-      el(
-        "goalInput"
-      ).value
-    );
-
-
-  const date =
-    el(
-      "goalDate"
-    ).value;
-
-
-  if (
-    amount <= 0
-  ) {
-
-    alert(
-      "Please enter a valid goal amount."
-    );
-
-    return;
-
-  }
-
-
-  data.goalName =
-    name ||
-    "My Taiwan Savings";
-
-
-  data.goal =
-    amount;
-
-
-  data.goalDate =
-    date;
-
-
-  saveData();
-
-  updateGoal();
-
-  updateHome();
-
-  showToast(
-    "Savings goal saved! 🎯"
-  );
-
-}
-
-
-
-/* =====================================================
-   SALARY
-   ===================================================== */
-
-function updateSalary() {
-
-  const salary =
-    Number(
-      el(
-        "salaryInput"
-      ).value
-    ) || 0;
-
-
-  data.salary =
-    salary;
-
-
-  el(
-    "salaryPHP"
-  ).textContent =
-    php(
-      salary
-    );
-
-
-  const save =
-    Number(
-      el(
-        "savePercent"
-      ).value
-    );
-
-
-  const expense =
-    Number(
-      el(
-        "expensePercent"
-      ).value
-    );
-
-
-  const family =
-    Number(
-      el(
-        "familyPercent"
-      ).value
-    );
-
-
-  const other =
-    Number(
-      el(
-        "otherPercent"
-      ).value
-    );
-
-
-  const total =
-    save +
-    expense +
-    family +
-    other;
-
-
-  el(
-    "allocationTotal"
-  ).textContent =
-    total + "%";
-
-
-  el(
-    "savePercentText"
-  ).textContent =
-    save + "%";
-
-
-  el(
-    "expensePercentText"
-  ).textContent =
-    expense + "%";
-
-
-  el(
-    "familyPercentText"
-  ).textContent =
-    family + "%";
-
-
-  el(
-    "otherPercentText"
-  ).textContent =
-    other + "%";
-
-
-  el(
-    "saveAmount"
-  ).textContent =
-    nt(
-      salary *
-      save / 100
-    );
-
-
-  el(
-    "expenseAmount"
-  ).textContent =
-    nt(
-      salary *
-      expense / 100
-    );
-
-
-  el(
-    "familyAmount"
-  ).textContent =
-    nt(
-      salary *
-      family / 100
-    );
-
-
-  el(
-    "otherAmount"
-  ).textContent =
-    nt(
-      salary *
-      other / 100
-    );
-
-
-  if (
-    total === 100
-  ) {
-
-    el(
-      "allocationWarning"
-    )
-    .classList.add(
-      "hidden"
-    );
+    $("totalSavingsPHP").textContent =
+      "••••••";
 
   } else {
 
-    el(
-      "allocationWarning"
-    )
-    .classList.remove(
-      "hidden"
-    );
+    $("totalSavings").textContent =
+      formatNT(saved);
+
+    $("totalSavingsPHP").textContent =
+      formatPHP(saved);
 
   }
 
 
-  data.savePercent =
-    save;
-
-  data.expensePercent =
-    expense;
-
-  data.familyPercent =
-    family;
-
-  data.otherPercent =
-    other;
+  $("rateDisplay").textContent =
+    data.exchangeRate.toFixed(4);
 
 
-  saveData();
-
-}
-
-
-[
-  "salaryInput",
-  "savePercent",
-  "expensePercent",
-  "familyPercent",
-  "otherPercent"
-]
-.forEach(
-  id => {
-
-    el(id)
-      .addEventListener(
-        "input",
-        updateSalary
-      );
-
-  }
-);
+  $("goalPercent").textContent =
+    percentage.toFixed(0) + "%";
 
 
-
-/* =====================================================
-   TRANSACTIONS LIST
-   ===================================================== */
-
-let currentFilter =
-  "all";
+  $("goalProgress").style.width =
+    percentage + "%";
 
 
-function filterTransactions(
-  filter,
-  button
-) {
-
-  currentFilter =
-    filter;
+  $("savedText").textContent =
+    formatNT(saved) + " saved";
 
 
-  document
-    .querySelectorAll(
-      ".filter"
-    )
-    .forEach(
-      item =>
-        item.classList.remove(
-          "active"
-        )
+  $("goalText").textContent =
+    "Goal " +
+    formatNT(data.goalAmount);
+
+
+  /* Salary */
+
+  $("salaryDisplay").textContent =
+    formatNT(data.salary);
+
+
+  $("salaryPHP").textContent =
+    formatPHP(data.salary);
+
+
+  $("recommendedSaving").textContent =
+    formatNT(
+      data.salary *
+      data.savingsPercent /
+      100
     );
 
 
-  if (button) {
-
-    button.classList.add(
-      "active"
-    );
-
-  }
-
-
-  renderTransactions();
-
-}
-
-
-function getTransactionIcon(
-  type
-) {
-
-  const icons = {
-
-    income: "💵",
-
-    saving: "🏦",
-
-    expense: "🍜",
-
-    family: "🇵🇭",
-
-    other: "📦"
-
-  };
-
-
-  return (
-    icons[type] ||
-    "💰"
+  renderTransactions(
+    "recentTransactions",
+    3,
+    "all"
   );
 
 }
 
 
-function getTransactionName(
-  type
-) {
+/* =========================================
+   HIDE BALANCE
+========================================= */
 
-  const names = {
+$("hideBalance")
+  .addEventListener(
+    "click",
+    () => {
 
-    income: "Income",
+      data.hideBalance =
+        !data.hideBalance;
 
-    saving: "Savings",
+      saveData();
 
-    expense: "Expense",
+      renderHome();
 
-    family: "Family / PH",
+      $("hideBalance")
+        .textContent =
+        data.hideBalance
+          ? "◎"
+          : "◉";
 
-    other: "Others"
-
-  };
-
-
-  return (
-    names[type] ||
-    type
+    }
   );
 
-}
+
+/* =========================================
+   TRANSACTION ICONS
+========================================= */
+
+const icons = {
+
+  income: "💵",
+
+  saving: "🏦",
+
+  expense: "🍜",
+
+  family: "🇵🇭",
+
+  other: "📦"
+
+};
 
 
-function renderTransactions() {
+const labels = {
+
+  income: "Income",
+
+  saving: "Savings",
+
+  expense: "Expense",
+
+  family: "Family / PH",
+
+  other: "Others"
+
+};
+
+
+/* =========================================
+   RENDER TRANSACTIONS
+========================================= */
+
+function renderTransactions(
+  elementId,
+  limit = 999,
+  filter = "all"
+) {
 
   const container =
-    el(
-      "transactionList"
-    );
+    $(elementId);
 
 
   let transactions =
-    data.transactions;
+    data.transactions
+      .filter(
+        transaction =>
+          filter === "all" ||
+          transaction.type === filter
+      )
+      .slice(0, limit);
 
 
   if (
-    currentFilter !==
-    "all"
-  ) {
-
-    transactions =
-      transactions.filter(
-        t =>
-          t.type ===
-          currentFilter
-      );
-
-  }
-
-
-  if (
-    transactions.length ===
-    0
+    transactions.length === 0
   ) {
 
     container.innerHTML = `
+      <div class="empty">
 
-      <div class="friendly-card">
+        📭 No transactions yet.
 
-        <div class="friendly-icon">
-          📭
-        </div>
+        <br>
 
-        <div class="friendly-content">
-
-          <h3>
-            No transactions yet
-          </h3>
-
-          <p>
-            Add your first transaction
-            to start tracking.
-          </p>
-
-        </div>
+        Add your first activity
+        to start tracking.
 
       </div>
-
     `;
 
     return;
@@ -1146,93 +512,81 @@ function renderTransactions() {
         transaction => {
 
           const positive =
-            [
-              "income",
-              "saving"
-            ]
-            .includes(
-              transaction.type
-            );
+            transaction.type === "income" ||
+            transaction.type === "saving";
 
 
           return `
 
             <div class="transaction">
 
-              <div class="transaction-icon">
+              <div class="tx-icon">
 
-                ${getTransactionIcon(
-                  transaction.type
-                )}
+                ${icons[transaction.type]}
 
               </div>
 
 
-              <div class="transaction-info">
+              <div class="tx-info">
 
-                <strong>
-
+                <b>
                   ${escapeHTML(
                     transaction.description
                   )}
+                </b>
 
-                </strong>
+                <span>
 
-                <small>
+                  ${transaction.date}
 
-                  ${escapeHTML(
-                    transaction.date
-                  )}
                   •
-                  ${getTransactionName(
-                    transaction.type
-                  )}
+                  ${labels[transaction.type]}
 
-                </small>
+                </span>
 
               </div>
 
 
-              <div class="transaction-money">
+              <div class="tx-money">
 
-                <strong
-                  class="${
-                    positive
-                      ? "positive"
-                      : "negative"
-                  }">
+                <b class="${
+                  positive
+                    ? "plus"
+                    : "minus"
+                }">
 
                   ${
                     positive
                       ? "+"
                       : "-"
                   }
-                  ${nt(
+
+                  ${formatNT(
                     transaction.amount
                   )}
 
-                </strong>
+                </b>
 
-                <small>
 
-                  ${php(
+                <span>
+
+                  ${formatPHP(
                     transaction.amount
                   )}
 
-                </small>
+                </span>
 
               </div>
 
 
               <button
-                class="delete-transaction"
-                onclick="
-                  deleteTransaction(
-                    ${transaction.id}
-                  )
-                ">
+                class="delete"
+                onclick="deleteTransaction(
+                  ${transaction.id}
+                )"
+              >
 
-                ✕
+                ×
 
               </button>
 
@@ -1247,19 +601,911 @@ function renderTransactions() {
 }
 
 
-function deleteTransaction(
-  id
-) {
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHTML(text) {
+
+  return String(text)
+
+    .replaceAll("&", "&amp;")
+
+    .replaceAll("<", "&lt;")
+
+    .replaceAll(">", "&gt;")
+
+    .replaceAll('"', "&quot;")
+
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* =========================================
+   ACTIVITY FILTER
+========================================= */
+
+document
+  .querySelectorAll(".filter")
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          document
+            .querySelectorAll(".filter")
+            .forEach(
+              b =>
+                b.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          currentFilter =
+            button.dataset.filter;
+
+
+          renderTransactions(
+            "allTransactions",
+            999,
+            currentFilter
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================
+   SAVINGS PAGE
+========================================= */
+
+function renderSavings() {
+
+  const totals =
+    getTotals();
+
+
+  const saved =
+    totals.savings;
+
+
+  let percentage = 0;
+
 
   if (
-    !confirm(
-      "Delete this transaction?"
-    )
+    data.goalAmount > 0
   ) {
 
-    return;
+    percentage =
+      Math.min(
+        100,
+        saved /
+        data.goalAmount *
+        100
+      );
 
   }
+
+
+  $("ringPercent")
+    .textContent =
+    percentage.toFixed(0) + "%";
+
+
+  $("goalRing")
+    .style.background =
+      `
+      conic-gradient(
+        var(--pink)
+        ${percentage * 3.6}deg,
+
+        rgba(255,255,255,.12)
+        ${percentage * 3.6}deg
+      )
+      `;
+
+
+  $("goalName").textContent =
+    data.goalName ||
+    "My Taiwan Savings";
+
+
+  $("goalAmount").textContent =
+    formatNT(
+      data.goalAmount
+    );
+
+
+  $("goalPHP").textContent =
+    formatPHP(
+      data.goalAmount
+    );
+
+
+  $("savedAmount").textContent =
+    formatNT(saved);
+
+
+  $("savedPHP").textContent =
+    formatPHP(saved);
+
+
+  const remaining =
+    Math.max(
+      0,
+      data.goalAmount - saved
+    );
+
+
+  $("remainingAmount").textContent =
+    formatNT(remaining);
+
+
+  $("remainingPHP").textContent =
+    formatPHP(remaining);
+
+
+  $("goalNameInput").value =
+    data.goalName;
+
+
+  $("goalInput").value =
+    data.goalAmount;
+
+
+  $("goalDate").value =
+    data.goalDate || "";
+
+}
+
+
+/* =========================================
+   SAVE GOAL
+========================================= */
+
+$("saveGoal")
+  .addEventListener(
+    "click",
+    () => {
+
+      const amount =
+        Number(
+          $("goalInput").value
+        );
+
+
+      if (
+        amount <= 0
+      ) {
+
+        alert(
+          "Please enter a valid goal."
+        );
+
+        return;
+
+      }
+
+
+      data.goalName =
+        $("goalNameInput")
+          .value
+          .trim()
+        ||
+        "My Taiwan Savings";
+
+
+      data.goalAmount =
+        amount;
+
+
+      data.goalDate =
+        $("goalDate").value;
+
+
+      saveData();
+
+      renderAll();
+
+      showToast(
+        "Savings goal updated 🎯"
+      );
+
+    }
+  );
+
+
+/* =========================================
+   SALARY
+========================================= */
+
+function renderSalary() {
+
+  $("salaryInput").value =
+    data.salary || "";
+
+
+  $("salaryPHPBig")
+    .textContent =
+    formatPHP(
+      data.salary
+    );
+
+
+  $("saveRange").value =
+    data.savingsPercent;
+
+
+  $("expenseRange").value =
+    data.expensePercent;
+
+
+  $("familyRange").value =
+    data.familyPercent;
+
+
+  $("otherRange").value =
+    data.otherPercent;
+
+
+  const total =
+    data.savingsPercent +
+    data.expensePercent +
+    data.familyPercent +
+    data.otherPercent;
+
+
+  $("allocationTotal")
+    .textContent =
+    total + "%";
+
+
+  $("allocationWarning")
+    .classList.toggle(
+      "hidden",
+      total === 100
+    );
+
+
+  $("savePercent")
+    .textContent =
+    data.savingsPercent + "%";
+
+
+  $("expensePercent")
+    .textContent =
+    data.expensePercent + "%";
+
+
+  $("familyPercent")
+    .textContent =
+    data.familyPercent + "%";
+
+
+  $("otherPercent")
+    .textContent =
+    data.otherPercent + "%";
+
+
+  $("saveAmount")
+    .textContent =
+    formatNT(
+      data.salary *
+      data.savingsPercent /
+      100
+    );
+
+
+  $("expenseAmount")
+    .textContent =
+    formatNT(
+      data.salary *
+      data.expensePercent /
+      100
+    );
+
+
+  $("familyAmount")
+    .textContent =
+    formatNT(
+      data.salary *
+      data.familyPercent /
+      100
+    );
+
+
+  $("otherAmount")
+    .textContent =
+    formatNT(
+      data.salary *
+      data.otherPercent /
+      100
+    );
+
+}
+
+
+/* =========================================
+   SALARY INPUT
+========================================= */
+
+$("salaryInput")
+  .addEventListener(
+    "input",
+    () => {
+
+      data.salary =
+        Number(
+          $("salaryInput").value
+        ) || 0;
+
+
+      saveData();
+
+      renderSalary();
+
+      renderHome();
+
+    }
+  );
+
+
+/* =========================================
+   ALLOCATION SLIDERS
+========================================= */
+
+$("saveRange")
+  .addEventListener(
+    "input",
+    updateAllocation
+  );
+
+
+$("expenseRange")
+  .addEventListener(
+    "input",
+    updateAllocation
+  );
+
+
+$("familyRange")
+  .addEventListener(
+    "input",
+    updateAllocation
+  );
+
+
+$("otherRange")
+  .addEventListener(
+    "input",
+    updateAllocation
+  );
+
+
+function updateAllocation() {
+
+  data.savingsPercent =
+    Number(
+      $("saveRange").value
+    );
+
+
+  data.expensePercent =
+    Number(
+      $("expenseRange").value
+    );
+
+
+  data.familyPercent =
+    Number(
+      $("familyRange").value
+    );
+
+
+  data.otherPercent =
+    Number(
+      $("otherRange").value
+    );
+
+
+  saveData();
+
+  renderSalary();
+
+  renderHome();
+
+}
+
+
+/* =========================================
+   SETTINGS
+========================================= */
+
+function renderSettings() {
+
+  $("rateInput").value =
+    data.exchangeRate;
+
+
+  document.body
+    .classList.toggle(
+      "dark",
+      data.darkMode
+    );
+
+
+  $("appearance")
+    .textContent =
+    data.darkMode
+      ? "Dark Mode"
+      : "Light Mode";
+
+
+  $("themeBtn")
+    .textContent =
+    data.darkMode
+      ? "☀"
+      : "☾";
+
+}
+
+
+/* =========================================
+   EXCHANGE RATE
+========================================= */
+
+$("saveRate")
+  .addEventListener(
+    "click",
+    () => {
+
+      const rate =
+        Number(
+          $("rateInput").value
+        );
+
+
+      if (
+        rate <= 0
+      ) {
+
+        alert(
+          "Please enter a valid exchange rate."
+        );
+
+        return;
+
+      }
+
+
+      data.exchangeRate =
+        rate;
+
+
+      saveData();
+
+      renderAll();
+
+      showToast(
+        "Exchange rate saved 💱"
+      );
+
+    }
+  );
+
+
+/* =========================================
+   DARK MODE
+========================================= */
+
+$("darkMode")
+  .addEventListener(
+    "click",
+    () => {
+
+      data.darkMode =
+        !data.darkMode;
+
+
+      saveData();
+
+      renderSettings();
+
+    }
+  );
+
+
+$("themeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      data.darkMode =
+        !data.darkMode;
+
+
+      saveData();
+
+      renderSettings();
+
+    }
+  );
+
+
+/* =========================================
+   EXPORT
+========================================= */
+
+$("exportData")
+  .addEventListener(
+    "click",
+    () => {
+
+      const file =
+        new Blob(
+          [
+            JSON.stringify(
+              data,
+              null,
+              2
+            )
+          ],
+          {
+            type:
+              "application/json"
+          }
+        );
+
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+
+      link.href =
+        URL.createObjectURL(
+          file
+        );
+
+
+      link.download =
+        "taiwan-ipon-backup.json";
+
+
+      link.click();
+
+
+      showToast(
+        "Backup exported 📤"
+      );
+
+    }
+  );
+
+
+/* =========================================
+   IMPORT
+========================================= */
+
+$("importData")
+  .addEventListener(
+    "change",
+    event => {
+
+      const file =
+        event.target.files[0];
+
+
+      if (!file) return;
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        () => {
+
+          try {
+
+            const imported =
+              JSON.parse(
+                reader.result
+              );
+
+
+            if (
+              !imported.transactions
+            ) {
+
+              throw new Error();
+
+            }
+
+
+            data =
+              imported;
+
+
+            saveData();
+
+            renderAll();
+
+            showToast(
+              "Backup restored 📥"
+            );
+
+          }
+
+          catch {
+
+            alert(
+              "Invalid backup file."
+            );
+
+          }
+
+        };
+
+
+      reader.readAsText(
+        file
+      );
+
+    }
+  );
+
+
+/* =========================================
+   RESET
+========================================= */
+
+$("resetData")
+  .addEventListener(
+    "click",
+    () => {
+
+      const confirmReset =
+        confirm(
+          "Delete all Taiwan Ipon data?"
+        );
+
+
+      if (!confirmReset) return;
+
+
+      localStorage.removeItem(
+        STORAGE_KEY
+      );
+
+
+      location.reload();
+
+    }
+  );
+
+
+/* =========================================
+   TRANSACTION MODAL
+========================================= */
+
+function openTransaction(
+  type = "expense"
+) {
+
+  currentTransactionType =
+    type;
+
+
+  document
+    .querySelectorAll(
+      ".transaction-types button"
+    )
+    .forEach(
+      button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.type ===
+          type
+        );
+
+      }
+    );
+
+
+  $("transactionAmount")
+    .value = "";
+
+
+  $("transactionDescription")
+    .value = "";
+
+
+  $("transactionDate")
+    .value =
+    today();
+
+
+  $("transactionModal")
+    .classList.add(
+      "show"
+    );
+
+}
+
+
+window.openTransaction =
+  openTransaction;
+
+
+/* =========================================
+   TRANSACTION TYPE BUTTONS
+========================================= */
+
+document
+  .querySelectorAll(
+    ".transaction-types button"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          currentTransactionType =
+            button.dataset.type;
+
+
+          document
+            .querySelectorAll(
+              ".transaction-types button"
+            )
+            .forEach(
+              b =>
+                b.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* =========================================
+   CLOSE MODAL
+========================================= */
+
+$("closeModal")
+  .addEventListener(
+    "click",
+    () => {
+
+      $("transactionModal")
+        .classList.remove(
+          "show"
+        );
+
+    }
+  );
+
+
+/* =========================================
+   SUBMIT TRANSACTION
+========================================= */
+
+$("transactionForm")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const amount =
+        Number(
+          $("transactionAmount")
+            .value
+        );
+
+
+      const description =
+        $("transactionDescription")
+          .value
+          .trim();
+
+
+      const date =
+        $("transactionDate")
+          .value;
+
+
+      if (
+        amount <= 0 ||
+        !description ||
+        !date
+      ) {
+
+        return;
+
+      }
+
+
+      data.transactions.unshift({
+
+        id:
+          Date.now(),
+
+        type:
+          currentTransactionType,
+
+        amount:
+          amount,
+
+        description:
+          description,
+
+        date:
+          date
+
+      });
+
+
+      saveData();
+
+
+      $("transactionModal")
+        .classList.remove(
+          "show"
+        );
+
+
+      renderAll();
+
+
+      showToast(
+        "Transaction added ✅"
+      );
+
+    }
+  );
+
+
+/* =========================================
+   DELETE TRANSACTION
+========================================= */
+
+function deleteTransaction(id) {
+
+  const answer =
+    confirm(
+      "Delete this transaction?"
+    );
+
+
+  if (!answer) return;
 
 
   data.transactions =
@@ -1271,371 +1517,44 @@ function deleteTransaction(
 
   saveData();
 
-  renderTransactions();
-
-  updateAll();
+  renderAll();
 
   showToast(
-    "Transaction deleted."
+    "Transaction deleted"
   );
 
 }
 
 
-
-/* =====================================================
-   RATE
-   ===================================================== */
-
-function saveRate() {
-
-  const rate =
-    Number(
-      el(
-        "rateInput"
-      ).value
-    );
+window.deleteTransaction =
+  deleteTransaction;
 
 
-  if (
-    rate <= 0
-  ) {
+/* =========================================
+   RENDER EVERYTHING
+========================================= */
 
-    alert(
-      "Please enter a valid exchange rate."
-    );
+function renderAll() {
 
-    return;
+  renderHome();
 
-  }
-
-
-  data.exchangeRate =
-    rate;
-
-
-  saveData();
-
-  updateAll();
-
-  showToast(
-    "Exchange rate updated! 💱"
+  renderTransactions(
+    "allTransactions",
+    999,
+    currentFilter
   );
 
-}
+  renderSavings();
 
+  renderSalary();
 
-
-/* =====================================================
-   BACKUP
-   ===================================================== */
-
-function exportData() {
-
-  const json =
-    JSON.stringify(
-      data,
-      null,
-      2
-    );
-
-
-  const blob =
-    new Blob(
-      [json],
-      {
-        type:
-          "application/json"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.href =
-    url;
-
-
-  link.download =
-    "taiwan-ipon-backup.json";
-
-
-  link.click();
-
-
-  URL.revokeObjectURL(
-    url
-  );
-
-
-  showToast(
-    "Backup exported! 📤"
-  );
+  renderSettings();
 
 }
 
 
-el(
-  "importFile"
-)
-.addEventListener(
-  "change",
-  function() {
-
-    const file =
-      this.files[0];
-
-
-    if (!file) {
-
-      return;
-
-    }
-
-
-    const reader =
-      new FileReader();
-
-
-    reader.onload =
-      function(event) {
-
-        try {
-
-          const imported =
-            JSON.parse(
-              event.target.result
-            );
-
-
-          if (
-            !imported ||
-            !Array.isArray(
-              imported.transactions
-            )
-          ) {
-
-            throw new Error(
-              "Invalid"
-            );
-
-          }
-
-
-          data =
-            imported;
-
-
-          saveData();
-
-          loadSettings();
-
-          updateAll();
-
-          renderTransactions();
-
-
-          showToast(
-            "Backup restored! 📥"
-          );
-
-        } catch {
-
-          alert(
-            "Invalid backup file."
-          );
-
-        }
-
-      };
-
-
-    reader.readAsText(
-      file
-    );
-
-  }
-);
-
-
-
-/* =====================================================
-   RESET
-   ===================================================== */
-
-function resetApp() {
-
-  const answer =
-    confirm(
-      "Are you sure you want to delete ALL your tracker data?"
-    );
-
-
-  if (!answer) {
-
-    return;
-
-  }
-
-
-  localStorage.removeItem(
-    STORAGE_KEY
-  );
-
-
-  location.reload();
-
-}
-
-
-
-/* =====================================================
-   THEME
-   ===================================================== */
-
-function updateTheme() {
-
-  document.body
-    .classList.toggle(
-      "dark",
-      data.dark
-    );
-
-
-  el(
-    "themeBtn"
-  ).textContent =
-    data.dark
-      ? "☀️"
-      : "🌙";
-
-}
-
-
-el(
-  "themeBtn"
-)
-.addEventListener(
-  "click",
-  function() {
-
-    data.dark =
-      !data.dark;
-
-
-    saveData();
-
-    updateTheme();
-
-  }
-);
-
-
-
-/* =====================================================
-   LOAD SETTINGS
-   ===================================================== */
-
-function loadSettings() {
-
-  el(
-    "rateInput"
-  ).value =
-    data.exchangeRate;
-
-
-  el(
-    "salaryInput"
-  ).value =
-    data.salary || "";
-
-
-  el(
-    "savePercent"
-  ).value =
-    data.savePercent;
-
-
-  el(
-    "expensePercent"
-  ).value =
-    data.expensePercent;
-
-
-  el(
-    "familyPercent"
-  ).value =
-    data.familyPercent;
-
-
-  el(
-    "otherPercent"
-  ).value =
-    data.otherPercent;
-
-
-  el(
-    "goalName"
-  ).value =
-    data.goalName;
-
-
-  el(
-    "goalInput"
-  ).value =
-    data.goal;
-
-
-  el(
-    "goalDate"
-  ).value =
-    data.goalDate || "";
-
-
-  el(
-    "transactionDate"
-  ).value =
-    today();
-
-
-  updateTheme();
-
-}
-
-
-
-/* =====================================================
-   UPDATE EVERYTHING
-   ===================================================== */
-
-function updateAll() {
-
-  updateHome();
-
-  updateGoal();
-
-  updateSalary();
-
-  renderTransactions();
-
-}
-
-
-
-/* =====================================================
-   START
-   ===================================================== */
-
-loadSettings();
-
-updateAll();
+/* =========================================
+   START APP
+========================================= */
+
+renderAll();
